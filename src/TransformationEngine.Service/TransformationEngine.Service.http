@@ -1,0 +1,6 @@
+@TransformationEngine.Service_HostAddress = http://localhost:5082
+
+GET {{TransformationEngine.Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
