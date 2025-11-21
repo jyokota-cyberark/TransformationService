@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TransformationEngine.Core.Models;
 using TransformationEngine.Models;
 
 namespace TransformationEngine.Data;
@@ -14,6 +15,10 @@ public class TransformationEngineDbContext : DbContext
     public DbSet<TransformationRule> TransformationRules { get; set; } = null!;
     public DbSet<TransformedEntity> TransformedEntities { get; set; } = null!;
     public DbSet<TransformationHistory> TransformationHistories { get; set; } = null!;
+
+    // Transformation job management
+    public DbSet<TransformationJob> TransformationJobs { get; set; } = null!;
+    public DbSet<TransformationJobResult> TransformationJobResults { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -89,6 +94,43 @@ public class TransformationEngineDbContext : DbContext
             entity.Ignore(e => e.TransformedValue); // Ignore helper property
             entity.HasIndex(e => e.TransformedEntityId);
             entity.HasIndex(e => e.AppliedAt);
+        });
+
+        // Configure TransformationJob
+        modelBuilder.Entity<TransformationJob>(entity =>
+        {
+            entity.ToTable("TransformationJobs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.JobId).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.JobName).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.ExecutionMode).IsRequired().HasMaxLength(50).HasDefaultValue("InMemory");
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasDefaultValue("Submitted");
+            entity.Property(e => e.Progress).HasDefaultValue(0);
+            entity.Property(e => e.InputData).HasColumnType("jsonb");
+            entity.Property(e => e.ContextData).HasColumnType("jsonb");
+            entity.Property(e => e.SubmittedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.ErrorMessage).HasMaxLength(2000);
+            entity.HasOne(e => e.Result)
+                .WithOne(r => r.Job)
+                .HasForeignKey<TransformationJobResult>(r => r.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.JobId).IsUnique();
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ExecutionMode);
+            entity.HasIndex(e => e.SubmittedAt);
+        });
+
+        // Configure TransformationJobResult
+        modelBuilder.Entity<TransformationJobResult>(entity =>
+        {
+            entity.ToTable("TransformationJobResults");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OutputData).HasColumnType("jsonb");
+            entity.Property(e => e.ExecutionTimeMs).HasDefaultValue(0);
+            entity.Property(e => e.ErrorStackTrace).HasColumnType("text");
+            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasIndex(e => e.JobId);
         });
     }
 }

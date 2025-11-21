@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using TransformationEngine.Builders;
 using TransformationEngine.Core;
+using TransformationEngine.Interfaces.Services;
 using TransformationEngine.ScriptEngines;
 using TransformationEngine.Services;
 using TransformationEngine.Storage;
@@ -24,6 +25,37 @@ public static class ServiceCollectionExtensions
     {
         services.AddMemoryCache();
         
+        return services;
+    }
+
+    /// <summary>
+    /// Adds transformation job services for job submission and tracking
+    /// </summary>
+    public static IServiceCollection AddTransformationJobServices(
+        this IServiceCollection services,
+        IConfiguration? configuration = null)
+    {
+        // Register Spark job submission service
+        services.AddScoped<ISparkJobSubmissionService>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<SparkJobSubmissionService>>();
+            var config = configuration ?? sp.GetRequiredService<IConfiguration>();
+            return new SparkJobSubmissionService(config, logger);
+        });
+
+        // Note: ITransformationJobRepository must be registered in the Service layer
+        // which has access to TransformationEngineDbContext
+        
+        // Register main job service (requires repository to be registered first)
+        services.AddScoped<ITransformationJobService>(sp =>
+        {
+            var repository = sp.GetRequiredService<ITransformationJobRepository>();
+            var sparkService = sp.GetRequiredService<ISparkJobSubmissionService>();
+            var engine = sp.GetRequiredService<ITransformationEngine<Dictionary<string, object?>>>();
+            var logger = sp.GetRequiredService<ILogger<TransformationJobService>>();
+            return new TransformationJobService(repository, sparkService, engine, logger);
+        });
+
         return services;
     }
 

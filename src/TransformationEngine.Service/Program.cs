@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TransformationEngine.Data;
 using TransformationEngine.Extensions;
+using TransformationEngine.Interfaces.Services;
+using TransformationEngine.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,15 @@ builder.Services.AddTransformationEngine<Dictionary<string, object?>>(pipeline =
 {
     // Pipeline configuration can be added here if needed
 });
+
+// Register job repository (requires DbContext)
+builder.Services.AddScoped<ITransformationJobRepository, TransformationJobRepository>();
+
+// Add transformation job services
+builder.Services.AddTransformationJobServices(builder.Configuration);
+
+// Register test job service
+builder.Services.AddScoped<ITestSparkJobService, TestSparkJobService>();
 
 // Add CORS
 builder.Services.AddCors(options =>
