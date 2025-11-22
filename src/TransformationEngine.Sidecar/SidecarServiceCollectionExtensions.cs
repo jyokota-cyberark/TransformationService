@@ -25,6 +25,9 @@ public static class SidecarServiceCollectionExtensions
             configure?.Invoke(pipeline);
         });
 
+        // Register in-memory repository for sidecar scenarios
+        services.AddScoped<ITransformationJobRepository, InMemoryTransformationJobRepository>();
+
         // Register job service for sidecar
         services.AddScoped<ITransformationJobService, TransformationJobService>();
 

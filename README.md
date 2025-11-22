@@ -1,161 +1,84 @@
 # TransformationService
 
-A microservice for data transformation and ETL operations, supporting both in-memory transformations and distributed Spark jobs.
+Unified data transformation engine supporting multiple integration patterns and execution backends.
 
-## Overview
+## Quick Overview
 
-The Transformation Service provides:
-- RESTful API for transformation rule management
-- Web UI for configuring and testing transformations
-- In-memory transformation engine with custom scripts
-- Distributed Spark job orchestration for large-scale ETL
-- Multiple integration patterns: HTTP client, Sidecar DLL, Kafka streaming
-
-## Quick Start
-
-### Prerequisites
-- .NET 9.0 SDK
-- Docker and Docker Compose
-- PostgreSQL (via Docker)
-- Apache Spark cluster (via Docker)
-
-### 1. Start Infrastructure
-
-```bash
-./setup-infra.sh start
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    TRANSFORMATION ENGINE                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Multiple Integration Patterns:                                  │
+│  • HTTP REST API         (External services)                     │
+│  • Embedded Sidecar DLL  (In-process .NET)                       │
+│  • Kafka Event Stream    (Event-driven)                          │
+│                                                                   │
+│  Multiple Execution Modes:                                       │
+│  • InMemory    (< 1ms,     small datasets)                       │
+│  • Spark       (1-5s,      large datasets)                       │
+│  • Kafka       (async,     event streams)                        │
+│                                                                   │
+│  Data Flow:                                                      │
+│  Request → ITransformationJobService → Backend Executor          │
+│         → PostgreSQL (tracking) → Result                         │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-This will start:
-- PostgreSQL on port 5432
-- Spark Master on port 8080 (Web UI) and 7077 (Master)
-- Spark Workers on ports 8081 and 8082 (Web UIs)
-
-### 2. Run the Service
+## Start in 5 Minutes
 
 ```bash
+cd /Users/jason.yokota/Code/TransformationService
+
+# 1. Start infrastructure (2 min)
+docker compose -f docker-compose.postgres.yml up -d
+docker compose -f docker-compose.spark.yml up -d
+
+# 2. Prepare database (1 min)
 cd src/TransformationEngine.Service
-dotnet run
+dotnet ef database update
+
+# 3. Start service (1 min)
+dotnet run --urls="http://localhost:5004"
+
+# 4. Test it
+curl http://localhost:5004/api/test-jobs/health | jq
 ```
 
-The service will be available at:
-- HTTP: http://localhost:5004
-- HTTPS: https://localhost:7147
+✅ Service running at http://localhost:5004  
+✅ Spark UI at http://localhost:8080  
+✅ API docs at http://localhost:5004/swagger
 
-### 3. Access the Web UI
+**Next**: See **[QUICKSTART.md](QUICKSTART.md)** for first test
 
-Open your browser to:
-- Home: http://localhost:5004
-- Transformations: http://localhost:5004/Transformations
-- API Docs: http://localhost:5004/swagger
+---
 
-### 4. Monitor Spark
+## Key Features
 
-- Spark Master UI: http://localhost:8080
-- Worker 1 UI: http://localhost:8081
-- Worker 2 UI: http://localhost:8082
+- ✅ **Unified Interface** - Same API for all backends
+- ✅ **Multiple Backends** - InMemory, Spark, Kafka
+- ✅ **Integration Options** - HTTP, DLL embedding, Kafka pub/sub
+- ✅ **Job Tracking** - Database persistence with audit trail
+- ✅ **Async Support** - Long-running Spark jobs with polling
+- ✅ **Result Caching** - Configurable result storage
+- ✅ **Monitoring** - Health checks, metrics, logging
+- ✅ **Testing** - Built-in test framework
+- ✅ **Production Ready** - Configuration, security, scalability
 
-## Project Structure
+---
 
-```
-TransformationService/
-├── src/
-│   ├── TransformationEngine.Interfaces/  # Pure interfaces (NuGet)
-│   ├── TransformationEngine.Core/        # Implementation library
-│   ├── TransformationEngine.Client/      # HTTP client (NuGet)
-│   ├── TransformationEngine.Sidecar/     # DLL integration (NuGet)
-│   ├── TransformationEngine.Service/     # Web API + UI
-│   └── TransformationEngine.Spark/       # Spark job orchestration (planned)
-├── tests/
-│   └── TransformationEngine.Tests/
-├── docs/
-├── spark-jobs/                           # Spark job files
-├── docker-compose.postgres.yml           # PostgreSQL container
-├── docker-compose.spark.yml              # Spark cluster
-└── setup-infra.sh                        # Infrastructure setup script
-```
+## Documentation
 
-## Infrastructure Management
+| Document | Purpose | Read Time |
+|----------|---------|-----------|
+| **[QUICKSTART.md](QUICKSTART.md)** | Get running in 5 minutes | 5 min |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | System design & integration patterns | 15 min |
+| **[INTEGRATION.md](INTEGRATION.md)** | How services integrate with TransformationService | 20 min |
+| **[DEVELOPMENT.md](DEVELOPMENT.md)** | Extend & customize for your needs | 30 min |
 
-### Start all services:
-```bash
-./setup-infra.sh start
-```
-
-### Stop all services:
-```bash
-./setup-infra.sh stop
-```
-
-### Check service status:
-```bash
-./setup-infra.sh status
-```
-
-### Restart all services:
-```bash
-./setup-infra.sh restart
-```
-
-## Configuration
-
-Update `appsettings.json` in `TransformationEngine.Service`:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=transformationengine;Username=postgres;Password=postgres"
-  },
-  "Spark": {
-    "MasterUrl": "spark://localhost:7077",
-    "WebUIUrl": "http://localhost:8080"
-  }
-}
-```
+---
 
 ## Integration Patterns
 
-### 1. HTTP Client
-```csharp
-// Install TransformationEngine.Client NuGet package
-var client = new TransformationClient("http://localhost:5004");
-var result = await client.TransformAsync(data, rules);
-```
-
-### 2. Sidecar DLL
-```csharp
-// Install TransformationEngine.Sidecar NuGet package
-services.AddTransformationEngine<MyDataType>(pipeline => {
-    // Configure pipeline
-});
-```
-
-### 3. Spark Jobs
-```bash
-# Submit a Spark job
-docker exec -it transformation-spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  /opt/spark-jobs/my-job.jar
-```
-
-## Development
-
-### Build the solution:
-```bash
-dotnet build
-```
-
-### Run tests:
-```bash
-dotnet test
-```
-
-### Create a database migration:
-```bash
-cd src/TransformationEngine.Service
-dotnet ef migrations add MigrationName
-dotnet ef database update
-```
-
-## License
-
-See LICENSE file for details.
+### Pattern 1: HTTP REST (Any Language)
