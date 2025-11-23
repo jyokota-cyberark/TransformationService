@@ -6,23 +6,23 @@ Unified data transformation engine supporting multiple integration patterns and 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    TRANSFORMATION ENGINE                         │
+│                    TRANSFORMATION ENGINE                        │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  Multiple Integration Patterns:                                  │
-│  • HTTP REST API         (External services)                     │
-│  • Embedded Sidecar DLL  (In-process .NET)                       │
-│  • Kafka Event Stream    (Event-driven)                          │
-│                                                                   │
-│  Multiple Execution Modes:                                       │
-│  • InMemory    (< 1ms,     small datasets)                       │
-│  • Spark       (1-5s,      large datasets)                       │
-│  • Kafka       (async,     event streams)                        │
-│                                                                   │
-│  Data Flow:                                                      │
-│  Request → ITransformationJobService → Backend Executor          │
-│         → PostgreSQL (tracking) → Result                         │
-│                                                                   │
+│                                                                 │
+│  Multiple Integration Patterns:                                 │
+│  • HTTP REST API         (External services)                    │
+│  • Embedded Sidecar DLL  (In-process .NET)                      │
+│  • Kafka Event Stream    (Event-driven)                         │
+│                                                                 │
+│  Multiple Execution Modes:                                      │
+│  • InMemory    (< 1ms,     small datasets)                      │
+│  • Spark       (1-5s,      large datasets)                      │
+│  • Kafka       (async,     event streams)                       │
+│                                                                 │
+│  Data Flow:                                                     │
+│  Request → ITransformationJobService → Backend Executor         │
+│         → PostgreSQL (tracking) → Result                        │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -78,7 +78,3 @@ curl http://localhost:5004/api/test-jobs/health | jq
 | **[DEVELOPMENT.md](DEVELOPMENT.md)** | Extend & customize for your needs | 30 min |
 
 ---
-
-## Integration Patterns
-
-### Pattern 1: HTTP REST (Any Language)

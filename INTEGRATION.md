@@ -5,42 +5,42 @@ Understand how the transformation engine integrates with other services and exec
 ## Integration Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    SERVICE INTEGRATIONS                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  InventoryService          DiscoveryService     ApplicationService
-│  (Consumer)                (Consumer)           (Consumer)
-│       │                         │                    │
-│       ├──────────────┬──────────┴──────────┬────────┤
-│                      │                     │
-│                      ▼                     ▼
-│           ┌─────────────────────────────────────────┐
-│           │   TransformationService (:5004)         │
-│           │   ┌────────────────────────────────────┐│
-│           │   │ HTTP REST API / Sidecar DLL / Kafka││
-│           │   │ ┌──────────────────────────────────┤│
-│           │   │ │ ITransformationJobService        ││
-│           │   │ │ (Unified Interface)              ││
-│           │   │ └──────────────────────────────────┤│
-│           │   │ Route to Execution Backend:        ││
-│           │   │ ├─ InMemory (< 1ms)               ││
-│           │   │ ├─ Spark (1-5s)                    ││
-│           │   │ └─ Kafka (Async)                   ││
-│           │   └──────────────────────────────────┘│
-│           └─────────────────────────────────────────┘
-│                   │                 │
-│                   ▼                 ▼
-│           ┌────────────────┐  ┌──────────────┐
-│           │  PostgreSQL    │  │ Spark Cluster│
-│           │  (:5432)       │  │ (:7077, 8080)│
-│           └────────────────┘  └──────────────┘
-│                   ▲
-│                   │ (poll results)
-│                   │
-│           Query Results API
-│
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                    SERVICE INTEGRATIONS                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  InventoryService          DiscoveryService     ApplicationService  │
+│  (Consumer)                (Consumer)           (Consumer)          │
+│       │                         │                    │              │
+│       ├──────────────┬──────────┴──────────┬────────┤               │
+│                      │                     │                        │
+│                      ▼                     ▼                        │
+│           ┌───────────────────────────────────────────┐             │
+│           │   TransformationService (:5004)           │             │
+│           │   ┌────────────────────────────────────┐  │             │
+│           │   │ HTTP REST API / Sidecar DLL / Kafka│  │             │
+│           │   │ ┌──────────────────────────────────┤  │             │
+│           │   │ │ ITransformationJobService        │  │             │
+│           │   │ │ (Unified Interface)              │  │             │
+│           │   │ └──────────────────────────────────┤  │             │
+│           │   │ Route to Execution Backend:        │  │             │
+│           │   │ ├─ InMemory (< 1ms)                │  │             │
+│           │   │ ├─ Spark (1-5s)                    │  │             │
+│           │   │ └─ Kafka (Async)                   │  │             │
+│           │   └────────────────────────────────────┘  │             │
+│           └───────────────────────────────────────────┘             │
+│                   │                 │                               │
+│                   ▼                 ▼                               │
+│           ┌────────────────┐  ┌──────────────┐                      │             
+│           │  PostgreSQL    │  │ Spark Cluster│                      │
+│           │  (:5432)       │  │ (:7077, 8080)│                      │
+│           └────────────────┘  └──────────────┘                      │
+│                   ▲                                                 │
+│                   │ (poll results)                                  │
+│                   │                                                 │
+│           Query Results API                                         │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -50,56 +50,56 @@ Understand how the transformation engine integrates with other services and exec
 When using Kafka execution mode, requests flow through the event streaming pipeline:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                  KAFKA ENRICHMENT FLOW                           │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  Step 1: Submit Job via Kafka                                   │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │ Application publishes to:                                  │ │
-│  │ Topic: transformation-jobs.requests                        │ │
-│  │ Message: {jobId, jobName, inputData, ruleIds}             │ │
-│  └────────┬─────────────────────────────────────────────────┘ │
-│           │                                                     │
-│           ▼                                                     │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │ Kafka Broker (:9092)                                       │ │
-│  │ • transformation-jobs.requests (inbound)                   │ │
-│  │ • transformation-jobs.status (status updates)              │ │
-│  │ • transformation-jobs.results (completed)                  │ │
-│  └────────┬─────────────────────────────────────────────────┘ │
-│           │                                                     │
-│           ▼                                                     │
-│  Step 2: Enrichment Service Consumes                           │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │ Enrichment Service subscribes to requests topic            │ │
-│  │ Deserializes transformation job request                    │ │
-│  │ Fetches transformation rules from database                 │ │
-│  │ Applies transformations (InMemory or Spark)                │ │
-│  │ Publishes enriched data to results topic                   │ │
-│  └────────┬─────────────────────────────────────────────────┘ │
-│           │                                                     │
-│           ▼                                                     │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │ Result Storage & Retrieval                                 │ │
-│  │ ┌─────────────────────────────────────────────────────────┐│
-│  │ │ Option A: Query Database                                ││
-│  │ │ GET /api/transformation-jobs/{jobId}/result             ││
-│  │ │ SELECT * FROM TransformationJobResults WHERE jobId=...  ││
-│  │ └─────────────────────────────────────────────────────────┘│
-│  │ ┌─────────────────────────────────────────────────────────┐│
-│  │ │ Option B: Consume Results from Kafka                    ││
-│  │ │ Subscribe to transformation-jobs.results topic          ││
-│  │ │ Receive result events in real-time                      ││
-│  │ └─────────────────────────────────────────────────────────┘│
-│  │ ┌─────────────────────────────────────────────────────────┐│
-│  │ │ Option C: Poll Status API                               ││
-│  │ │ GET /api/transformation-jobs/{jobId}/status             ││
-│  │ │ Retry until status = "Completed"                        ││
-│  │ └─────────────────────────────────────────────────────────┘│
-│  └────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-└─────────────────────────────────────────────────────────────────┘
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Step 1: Submit Job via Kafka                                    │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ Application publishes to:                                   │ │
+│  │ Topic: transformation-jobs.requests                         │ │
+│  │ Message: {jobId, jobName, inputData, ruleIds}               │ │
+│  └────────┬────────────────────────────────────────────────────┘ │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ Kafka Broker (:9092)                                        │ │
+│  │ • transformation-jobs.requests (inbound)                    │ │
+│  │ • transformation-jobs.status (status updates)               │ │
+│  │ • transformation-jobs.results (completed)                   │ │
+│  └────────┬────────────────────────────────────────────────────┘ │
+│           │                                                      │
+│           ▼                                                      │
+│  Step 2: Enrichment Service Consumes                             │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ Enrichment Service subscribes to requests topic             │ │
+│  │ Deserializes transformation job request                     │ │
+│  │ Fetches transformation rules from database                  │ │
+│  │ Applies transformations (InMemory or Spark)                 │ │
+│  │ Publishes enriched data to results topic                    │ │
+│  └────────┬────────────────────────────────────────────────────┘ │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ Result Storage & Retrieval                                  │ │
+│  │ ┌─────────────────────────────────────────────────────────┐ │ │
+│  │ │ Option A: Query Database                                │ │ │
+│  │ │ GET /api/transformation-jobs/{jobId}/result             │ │ │
+│  │ │ SELECT * FROM TransformationJobResults WHERE jobId=...  │ │ │
+│  │ └─────────────────────────────────────────────────────────┘ │ │
+│  │ ┌─────────────────────────────────────────────────────────┐ │ │
+│  │ │ Option B: Consume Results from Kafka                    │ │ │
+│  │ │ Subscribe to transformation-jobs.results topic          │ │ │
+│  │ │ Receive result events in real-time                      │ │ │
+│  │ └─────────────────────────────────────────────────────────┘ │ │
+│  │ ┌─────────────────────────────────────────────────────────┐ │ │
+│  │ │ Option C: Poll Status API                               │ │ │
+│  │ │ GET /api/transformation-jobs/{jobId}/status             │ │ │
+│  │ │ Retry until status = "Completed"                        │ │ │
+│  │ └─────────────────────────────────────────────────────────┘ │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 **Why Kafka Enrichment?**
