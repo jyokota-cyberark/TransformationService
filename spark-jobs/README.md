@@ -1,21 +1,33 @@
 # Spark Jobs Directory
 
-This directory is mounted into the Spark containers and can be used to store:
-
-- Spark job JARs
-- Python/PySpark scripts
-- Data files for processing
-- Job configuration files
+This directory is mounted into the Spark containers and stores all Spark job files.
 
 ## Directory Structure
 
 ```
 spark-jobs/
-├── jars/          # Java/Scala Spark job JARs
-├── python/        # Python/PySpark scripts
-├── data/          # Sample or test data files
-└── config/        # Job configuration files
+├── csharp/              # C# Spark.NET jobs (.dll files)
+│   ├── *.dll            # Compiled .NET assemblies
+│   └── *.deps.json      # Dependency files
+├── python/              # PySpark jobs (.py files)
+│   ├── *.py             # Python Spark scripts
+│   └── requirements.txt # Python dependencies
+├── scala/               # Scala/Java Spark jobs (.jar files)
+│   └── *.jar            # Compiled JAR files
+├── artifacts/           # Generated/uploaded job artifacts
+│   └── {jobKey}/        # Organized by job key
+├── templates/           # Job templates
+│   ├── csharp/          # C# templates
+│   ├── python/          # Python templates
+│   └── scala/           # Scala templates
+└── README.md            # This file
 ```
+
+## Supported Job Types
+
+### 1. C# Spark.NET Jobs
+### 2. PySpark Jobs
+### 3. Scala/Java Jobs
 
 ## Submitting a Spark Job
 

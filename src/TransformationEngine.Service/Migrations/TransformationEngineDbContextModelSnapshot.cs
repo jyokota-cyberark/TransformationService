@@ -22,6 +22,506 @@ namespace TransformationEngine.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Author")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CompiledArtifactPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DefaultArgumentsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("DefaultDriverMemoryMb")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DefaultExecutorCores")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DefaultExecutorMemoryMb")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DefaultNumExecutors")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DependenciesJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("EntryPoint")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("FilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("GeneratorConfigJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("GeneratorType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsGeneric")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsTemplate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JobKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("JobName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("JobType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MainClass")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PyFile")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SourceCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SparkConfigJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("StorageType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TagsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("TemplateEngine")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TemplateVariablesJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Version")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("JobKey")
+                        .IsUnique();
+
+                    b.HasIndex("JobType");
+
+                    b.ToTable("SparkJobDefinitions", (string)null);
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationLog")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ArgumentsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<long?>("BytesRead")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("BytesWritten")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrentStage")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ErrorStackTrace")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExecutionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("ExecutorCores")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ExecutorMemoryMb")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("JobDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LogPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("NumExecutors")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OutputPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Progress")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("QueuedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long?>("RecordsWritten")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ResultSummaryJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("RowsProcessed")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("ScheduleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SparkDriverLog")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SparkJobId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SparkSubmissionCommand")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Queued");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TriggerType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TriggeredBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("ExecutionId")
+                        .IsUnique();
+
+                    b.HasIndex("JobDefinitionId");
+
+                    b.HasIndex("QueuedAt");
+
+                    b.HasIndex("ScheduleId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("SparkJobExecutions", (string)null);
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CronExpression")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("DelayMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ExecutionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FailureCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("HangfireJobId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPaused")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("JobDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("JobParametersJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("LastExecutionAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("NextExecutionAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecurringJobId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ScheduleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ScheduleName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ScheduleType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SparkConfigJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int?>("SparkJobDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SuccessCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TimeZone")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("JobDefinitionId");
+
+                    b.HasIndex("NextExecutionAt");
+
+                    b.HasIndex("ScheduleKey")
+                        .IsUnique();
+
+                    b.HasIndex("SparkJobDefinitionId");
+
+                    b.ToTable("SparkJobSchedules", (string)null);
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Author")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsBuiltIn")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("SampleOutput")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SampleVariablesJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("TagsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("TemplateCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TemplateEngine")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Scriban");
+
+                    b.Property<string>("TemplateKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VariablesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Version")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("Language");
+
+                    b.HasIndex("TemplateKey")
+                        .IsUnique();
+
+                    b.ToTable("SparkJobTemplates", (string)null);
+                });
+
             modelBuilder.Entity("TransformationEngine.Core.Models.TransformationJob", b =>
                 {
                     b.Property<int>("Id")
@@ -147,6 +647,60 @@ namespace TransformationEngine.Migrations
                         .IsUnique();
 
                     b.ToTable("TransformationJobResults", (string)null);
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationRuleToSparkJobMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("GenerationStrategy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("DirectConversion");
+
+                    b.Property<bool>("IsStale")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("JobDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RuleSetHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RulesSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("JobDefinitionId");
+
+                    b.HasIndex("RuleSetHash");
+
+                    b.ToTable("TransformationRuleToSparkJobMappings", (string)null);
                 });
 
             modelBuilder.Entity("TransformationEngine.Models.RawData", b =>
@@ -347,6 +901,39 @@ namespace TransformationEngine.Migrations
                     b.ToTable("TransformedEntities", (string)null);
                 });
 
+            modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobExecution", b =>
+                {
+                    b.HasOne("TransformationEngine.Core.Models.SparkJobDefinition", "JobDefinition")
+                        .WithMany("Executions")
+                        .HasForeignKey("JobDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TransformationEngine.Core.Models.SparkJobSchedule", "Schedule")
+                        .WithMany()
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("JobDefinition");
+
+                    b.Navigation("Schedule");
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobSchedule", b =>
+                {
+                    b.HasOne("TransformationEngine.Core.Models.SparkJobDefinition", "JobDefinition")
+                        .WithMany()
+                        .HasForeignKey("JobDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TransformationEngine.Core.Models.SparkJobDefinition", null)
+                        .WithMany("Schedules")
+                        .HasForeignKey("SparkJobDefinitionId");
+
+                    b.Navigation("JobDefinition");
+                });
+
             modelBuilder.Entity("TransformationEngine.Core.Models.TransformationJobResult", b =>
                 {
                     b.HasOne("TransformationEngine.Core.Models.TransformationJob", "Job")
@@ -358,6 +945,17 @@ namespace TransformationEngine.Migrations
                     b.Navigation("Job");
                 });
 
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationRuleToSparkJobMapping", b =>
+                {
+                    b.HasOne("TransformationEngine.Core.Models.SparkJobDefinition", "JobDefinition")
+                        .WithMany()
+                        .HasForeignKey("JobDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobDefinition");
+                });
+
             modelBuilder.Entity("TransformationEngine.Models.TransformationHistory", b =>
                 {
                     b.HasOne("TransformationEngine.Models.TransformedEntity", "TransformedEntity")
@@ -367,6 +965,13 @@ namespace TransformationEngine.Migrations
                         .IsRequired();
 
                     b.Navigation("TransformedEntity");
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobDefinition", b =>
+                {
+                    b.Navigation("Executions");
+
+                    b.Navigation("Schedules");
                 });
 
             modelBuilder.Entity("TransformationEngine.Core.Models.TransformationJob", b =>

@@ -248,14 +248,39 @@ public class TransformationJobFilter
 public class SparkJobConfiguration
 {
     /// <summary>
-    /// JAR file path (relative to /opt/spark-jobs)
+    /// ID of the Spark job definition in the database (alternative to providing paths directly)
+    /// </summary>
+    public int? SparkJobDefinitionId { get; set; }
+
+    /// <summary>
+    /// Language of the Spark job (Python, Scala, CSharp)
+    /// </summary>
+    public string Language { get; set; } = "Python";
+
+    /// <summary>
+    /// JAR file path (relative to /opt/spark-jobs) - for Scala/Java
     /// </summary>
     public string? JarPath { get; set; }
 
     /// <summary>
-    /// Main class to execute
+    /// Python script path (relative to /opt/spark-jobs) - for PySpark
+    /// </summary>
+    public string? PythonScript { get; set; }
+
+    /// <summary>
+    /// DLL path (relative to /opt/spark-jobs) - for Spark.NET
+    /// </summary>
+    public string? DllPath { get; set; }
+
+    /// <summary>
+    /// Main class to execute (for Scala/Java JARs)
     /// </summary>
     public string? MainClass { get; set; }
+
+    /// <summary>
+    /// Entry point for .NET Spark jobs
+    /// </summary>
+    public string? EntryPoint { get; set; }
 
     /// <summary>
     /// Number of executor cores

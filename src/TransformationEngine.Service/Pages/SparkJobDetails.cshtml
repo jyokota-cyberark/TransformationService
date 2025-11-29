@@ -1,0 +1,501 @@
+@page
+@model TransformationEngine.Pages.SparkJobDetailsModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Spark Job Details";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-info-circle"></i> Spark Job Execution Details
+            </h1>
+        </div>
+        <div class="col-auto">
+            <a href="/SparkJobs" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Jobs
+            </a>
+        </div>
+    </div>
+
+    <div id="loadingIndicator" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading execution details...</p>
+    </div>
+
+    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+    <div id="executionDetails" style="display: none;">
+        <!-- Status Card -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Execution Status</h5>
+                        <div id="actionButtons"></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Execution ID:</strong><br>
+                                <code id="executionId"></code>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Status:</strong><br>
+                                <span id="statusBadge"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Progress:</strong><br>
+                                <div id="progressBar"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Current Stage:</strong><br>
+                                <span id="currentStage">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Information -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Job Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Job Name:</th>
+                                <td id="jobName">-</td>
+                            </tr>
+                            <tr>
+                                <th>Job Key:</th>
+                                <td><code id="jobKey">-</code></td>
+                            </tr>
+                            <tr>
+                                <th>Job Type:</th>
+                                <td id="jobType">-</td>
+                            </tr>
+                            <tr>
+                                <th>Language:</th>
+                                <td id="language">-</td>
+                            </tr>
+                            <tr>
+                                <th>Entity Type:</th>
+                                <td id="entityType">-</td>
+                            </tr>
+                            <tr>
+                                <th>Trigger Type:</th>
+                                <td id="triggerType">-</td>
+                            </tr>
+                            <tr>
+                                <th>Triggered By:</th>
+                                <td id="triggeredBy">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Timing Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Queued At:</th>
+                                <td id="queuedAt">-</td>
+                            </tr>
+                            <tr>
+                                <th>Submitted At:</th>
+                                <td id="submittedAt">-</td>
+                            </tr>
+                            <tr>
+                                <th>Started At:</th>
+                                <td id="startedAt">-</td>
+                            </tr>
+                            <tr>
+                                <th>Completed At:</th>
+                                <td id="completedAt">-</td>
+                            </tr>
+                            <tr>
+                                <th>Duration:</th>
+                                <td id="duration">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spark Configuration -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Spark Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Executor Cores:</strong> <span id="executorCores">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Executor Memory:</strong> <span id="executorMemory">-</span> MB
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Number of Executors:</strong> <span id="numExecutors">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Spark Job ID:</strong><br>
+                                <code id="sparkJobId">-</code>
+                            </div>
+                        </div>
+                        <div class="mt-3" id="sparkSubmissionCommandSection" style="display: none;">
+                            <strong>Submission Command:</strong>
+                            <pre class="bg-light p-2 rounded mt-2" id="sparkSubmissionCommand"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="row mb-4" id="resultsSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Execution Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Rows Processed:</strong> <span id="rowsProcessed">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Records Written:</strong> <span id="recordsWritten">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Bytes Read:</strong> <span id="bytesRead">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Bytes Written:</strong> <span id="bytesWritten">-</span>
+                            </div>
+                        </div>
+                        <div class="mt-3" id="outputPathSection" style="display: none;">
+                            <strong>Output Path:</strong>
+                            <code id="outputPath">-</code>
+                        </div>
+                        <div class="mt-3" id="resultSummarySection" style="display: none;">
+                            <strong>Result Summary:</strong>
+                            <pre class="bg-light p-2 rounded mt-2" id="resultSummary"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Information -->
+        <div class="row mb-4" id="errorSection" style="display: none;">
+            <div class="col-12">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Error Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Error Message:</strong>
+                            <pre class="bg-light p-2 rounded mt-2" id="errorMessage"></pre>
+                        </div>
+                        <div id="errorStackTraceSection" style="display: none;">
+                            <strong>Stack Trace:</strong>
+                            <pre class="bg-light p-2 rounded mt-2" style="max-height: 300px; overflow-y: auto;" id="errorStackTrace"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Logs</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="logTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="driverLogTab" data-bs-toggle="tab" data-bs-target="#driverLogPane" type="button">Driver Log</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="applicationLogTab" data-bs-toggle="tab" data-bs-target="#applicationLogPane" type="button">Application Log</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="logContent">
+                            <div class="tab-pane fade show active" id="driverLogPane" role="tabpanel">
+                                <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 500px; overflow-y: auto;" id="driverLog">No driver log available</pre>
+                            </div>
+                            <div class="tab-pane fade" id="applicationLogPane" role="tabpanel">
+                                <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 500px; overflow-y: auto;" id="applicationLog">No application log available</pre>
+                            </div>
+                        </div>
+                        <div class="mt-3" id="logPathSection" style="display: none;">
+                            <strong>Log Path:</strong>
+                            <code id="logPath">-</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<script>
+    let executionId = null;
+    let autoRefreshInterval = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        executionId = urlParams.get('id');
+        if (executionId) {
+            loadExecutionDetails();
+            // Auto-refresh if job is still running
+            autoRefreshInterval = setInterval(() => {
+                loadExecutionDetails(true);
+            }, 5000); // 5 seconds
+        } else {
+            document.getElementById('errorMessage').textContent = 'No execution ID provided';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+    });
+
+    async function loadExecutionDetails(silent = false) {
+        if (!silent) {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('executionDetails').style.display = 'none';
+        }
+
+        try {
+            const response = await fetch(`/api/spark-job-executions/${executionId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const execution = await response.json();
+            displayExecutionDetails(execution);
+
+            // Stop auto-refresh if job is completed
+            if (execution.status === 'Succeeded' || execution.status === 'Failed' || execution.status === 'Cancelled') {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading execution details:', error);
+            if (!silent) {
+                document.getElementById('errorMessage').textContent = `Error loading execution details: ${error.message}`;
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        } finally {
+            if (!silent) {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+    }
+
+    function displayExecutionDetails(execution) {
+        document.getElementById('executionDetails').style.display = 'block';
+
+        // Execution ID and Status
+        document.getElementById('executionId').textContent = execution.executionId;
+        document.getElementById('statusBadge').innerHTML = getStatusBadge(execution.status);
+        
+        // Progress
+        const progressBar = document.getElementById('progressBar');
+        if (execution.status === 'Running' || execution.status === 'Submitting') {
+            progressBar.innerHTML = `
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" 
+                         style="width: ${execution.progress}%">
+                        ${execution.progress}%
+                    </div>
+                </div>
+            `;
+        } else {
+            progressBar.textContent = execution.progress > 0 ? `${execution.progress}%` : '-';
+        }
+
+        document.getElementById('currentStage').textContent = execution.currentStage || '-';
+
+        // Action buttons
+        const actionButtons = document.getElementById('actionButtons');
+        const canCancel = execution.status === 'Queued' || execution.status === 'Submitting' || execution.status === 'Running';
+        if (canCancel) {
+            actionButtons.innerHTML = `
+                <button class="btn btn-danger btn-sm" onclick="cancelExecution(${execution.id})">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+            `;
+        } else {
+            actionButtons.innerHTML = '';
+        }
+
+        // Job Information
+        if (execution.jobDefinition) {
+            document.getElementById('jobName').textContent = execution.jobDefinition.jobName || '-';
+            document.getElementById('jobKey').textContent = execution.jobDefinition.jobKey || '-';
+            document.getElementById('jobType').textContent = execution.jobDefinition.jobType || '-';
+            document.getElementById('language').textContent = execution.jobDefinition.language || '-';
+        }
+        document.getElementById('entityType').textContent = execution.entityType || '-';
+        document.getElementById('triggerType').textContent = execution.triggerType || '-';
+        document.getElementById('triggeredBy').textContent = execution.triggeredBy || '-';
+
+        // Timing
+        document.getElementById('queuedAt').textContent = formatDate(execution.queuedAt);
+        document.getElementById('submittedAt').textContent = formatDate(execution.submittedAt);
+        document.getElementById('startedAt').textContent = formatDate(execution.startedAt);
+        document.getElementById('completedAt').textContent = formatDate(execution.completedAt);
+        document.getElementById('duration').textContent = execution.durationSeconds 
+            ? `${execution.durationSeconds}s`
+            : calculateDuration(execution.startedAt, execution.completedAt);
+
+        // Spark Configuration
+        document.getElementById('executorCores').textContent = execution.executorCores || '-';
+        document.getElementById('executorMemory').textContent = execution.executorMemoryMb || '-';
+        document.getElementById('numExecutors').textContent = execution.numExecutors || '-';
+        document.getElementById('sparkJobId').textContent = execution.sparkJobId || '-';
+        
+        if (execution.sparkSubmissionCommand) {
+            document.getElementById('sparkSubmissionCommandSection').style.display = 'block';
+            document.getElementById('sparkSubmissionCommand').textContent = execution.sparkSubmissionCommand;
+        }
+
+        // Results
+        if (execution.rowsProcessed || execution.recordsWritten || execution.bytesRead || execution.bytesWritten) {
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('rowsProcessed').textContent = formatNumber(execution.rowsProcessed) || '-';
+            document.getElementById('recordsWritten').textContent = formatNumber(execution.recordsWritten) || '-';
+            document.getElementById('bytesRead').textContent = formatBytes(execution.bytesRead) || '-';
+            document.getElementById('bytesWritten').textContent = formatBytes(execution.bytesWritten) || '-';
+            
+            if (execution.outputPath) {
+                document.getElementById('outputPathSection').style.display = 'block';
+                document.getElementById('outputPath').textContent = execution.outputPath;
+            }
+            
+            if (execution.resultSummary) {
+                document.getElementById('resultSummarySection').style.display = 'block';
+                document.getElementById('resultSummary').textContent = JSON.stringify(execution.resultSummary, null, 2);
+            }
+        }
+
+        // Error Information
+        if (execution.errorMessage) {
+            document.getElementById('errorSection').style.display = 'block';
+            document.getElementById('errorMessage').textContent = execution.errorMessage;
+            if (execution.errorStackTrace) {
+                document.getElementById('errorStackTraceSection').style.display = 'block';
+                document.getElementById('errorStackTrace').textContent = execution.errorStackTrace;
+            }
+        }
+
+        // Logs
+        if (execution.sparkDriverLog) {
+            document.getElementById('driverLog').textContent = execution.sparkDriverLog;
+        }
+        if (execution.applicationLog) {
+            document.getElementById('applicationLog').textContent = execution.applicationLog;
+        }
+        if (execution.logPath) {
+            document.getElementById('logPathSection').style.display = 'block';
+            document.getElementById('logPath').textContent = execution.logPath;
+        }
+    }
+
+    async function cancelExecution(id) {
+        if (!confirm('Are you sure you want to cancel this execution?')) return;
+
+        try {
+            const response = await fetch(`/api/spark-job-executions/${id}/cancel`, { method: 'POST' });
+            if (response.ok) {
+                alert('Execution cancelled successfully');
+                loadExecutionDetails();
+            } else {
+                const error = await response.json();
+                alert(`Error: ${error.error || 'Failed to cancel execution'}`);
+            }
+        } catch (error) {
+            console.error('Error cancelling execution:', error);
+            alert('Error cancelling execution: ' + error.message);
+        }
+    }
+
+    function getStatusBadge(status) {
+        const badges = {
+            'Queued': 'bg-secondary',
+            'Submitting': 'bg-info',
+            'Running': 'bg-primary',
+            'Succeeded': 'bg-success',
+            'Failed': 'bg-danger',
+            'Cancelled': 'bg-warning'
+        };
+        const color = badges[status] || 'bg-secondary';
+        return `<span class="badge ${color}">${status}</span>`;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    }
+
+    function calculateDuration(startDate, endDate) {
+        if (!startDate) return '-';
+        const start = new Date(startDate);
+        const end = endDate ? new Date(endDate) : new Date();
+        const seconds = Math.floor((end - start) / 1000);
+        if (seconds < 60) return `${seconds}s`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
+        const hours = Math.floor(minutes / 60);
+        return `${hours}h ${minutes % 60}m`;
+    }
+
+    function formatNumber(num) {
+        if (!num) return null;
+        return num.toLocaleString();
+    }
+
+    function formatBytes(bytes) {
+        if (!bytes) return null;
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    }
+</script>
+}
+

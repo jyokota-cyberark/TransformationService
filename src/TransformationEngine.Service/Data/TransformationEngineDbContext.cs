@@ -20,6 +20,13 @@ public class TransformationEngineDbContext : DbContext
     public DbSet<TransformationJob> TransformationJobs { get; set; } = null!;
     public DbSet<TransformationJobResult> TransformationJobResults { get; set; } = null!;
 
+    // Spark job management
+    public DbSet<SparkJobDefinition> SparkJobDefinitions { get; set; } = null!;
+    public DbSet<SparkJobSchedule> SparkJobSchedules { get; set; } = null!;
+    public DbSet<SparkJobExecution> SparkJobExecutions { get; set; } = null!;
+    public DbSet<SparkJobTemplate> SparkJobTemplates { get; set; } = null!;
+    public DbSet<TransformationRuleToSparkJobMapping> TransformationRuleToSparkJobMappings { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -131,6 +138,121 @@ public class TransformationEngineDbContext : DbContext
             entity.Property(e => e.Metadata).HasColumnType("jsonb");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.HasIndex(e => e.JobId);
+        });
+
+        // Configure SparkJobDefinition
+        modelBuilder.Entity<SparkJobDefinition>(entity =>
+        {
+            entity.ToTable("SparkJobDefinitions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.JobKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.JobName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.JobType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Language).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.StorageType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Ignore(e => e.TemplateVariables);
+            entity.Ignore(e => e.GeneratorConfig);
+            entity.Ignore(e => e.SparkConfig);
+            entity.Ignore(e => e.DefaultArguments);
+            entity.Ignore(e => e.Dependencies);
+            entity.Ignore(e => e.Tags);
+            entity.HasIndex(e => e.JobKey).IsUnique();
+            entity.HasIndex(e => e.EntityType);
+            entity.HasIndex(e => e.JobType);
+            entity.HasIndex(e => e.Category);
+        });
+
+        // Configure SparkJobSchedule
+        modelBuilder.Entity<SparkJobSchedule>(entity =>
+        {
+            entity.ToTable("SparkJobSchedules");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ScheduleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ScheduleName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ScheduleType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.TimeZone).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Ignore(e => e.JobParameters);
+            entity.Ignore(e => e.SparkConfig);
+            entity.HasOne(e => e.JobDefinition)
+                .WithMany()
+                .HasForeignKey(e => e.JobDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.ScheduleKey).IsUnique();
+            entity.HasIndex(e => e.JobDefinitionId);
+            entity.HasIndex(e => e.NextExecutionAt);
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // Configure SparkJobExecution
+        modelBuilder.Entity<SparkJobExecution>(entity =>
+        {
+            entity.ToTable("SparkJobExecutions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ExecutionId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TriggerType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasDefaultValue("Queued");
+            entity.Property(e => e.QueuedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Ignore(e => e.Arguments);
+            entity.Ignore(e => e.ResultSummary);
+            entity.HasOne(e => e.JobDefinition)
+                .WithMany(j => j.Executions)
+                .HasForeignKey(e => e.JobDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Schedule)
+                .WithMany()
+                .HasForeignKey(e => e.ScheduleId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(e => e.ExecutionId).IsUnique();
+            entity.HasIndex(e => e.JobDefinitionId);
+            entity.HasIndex(e => e.ScheduleId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.QueuedAt);
+            entity.HasIndex(e => e.EntityType);
+        });
+
+        // Configure SparkJobTemplate
+        modelBuilder.Entity<SparkJobTemplate>(entity =>
+        {
+            entity.ToTable("SparkJobTemplates");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TemplateKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TemplateName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Language).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.TemplateCode).IsRequired().HasColumnType("text");
+            entity.Property(e => e.TemplateEngine).IsRequired().HasMaxLength(50).HasDefaultValue("Scriban");
+            entity.Property(e => e.VariablesJson).IsRequired().HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Ignore(e => e.Variables);
+            entity.Ignore(e => e.SampleVariables);
+            entity.Ignore(e => e.Tags);
+            entity.HasIndex(e => e.TemplateKey).IsUnique();
+            entity.HasIndex(e => e.Language);
+            entity.HasIndex(e => e.Category);
+        });
+
+        // Configure TransformationRuleToSparkJobMapping
+        modelBuilder.Entity<TransformationRuleToSparkJobMapping>(entity =>
+        {
+            entity.ToTable("TransformationRuleToSparkJobMappings");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.RuleSetHash).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.RulesSnapshotJson).IsRequired().HasColumnType("jsonb");
+            entity.Property(e => e.GenerationStrategy).IsRequired().HasMaxLength(50).HasDefaultValue("DirectConversion");
+            entity.Property(e => e.GeneratedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Ignore(e => e.RulesSnapshot);
+            entity.HasOne(e => e.JobDefinition)
+                .WithMany()
+                .HasForeignKey(e => e.JobDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.EntityType);
+            entity.HasIndex(e => e.JobDefinitionId);
+            entity.HasIndex(e => e.RuleSetHash);
         });
     }
 }

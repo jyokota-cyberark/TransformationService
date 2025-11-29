@@ -1,0 +1,603 @@
+@page
+@model TransformationEngine.Pages.EntityDataDebugModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Entity Data Debug";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-bug-fill"></i> Entity Data Debug
+            </h1>
+            <p class="lead">View raw and transformed entity data, and test transformations</p>
+        </div>
+    </div>
+
+    <!-- Filters and Controls -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Entity Type</h5>
+                    <select id="entityTypeSelect" class="form-select" onchange="loadEntityData()">
+                        <option value="">-- All Types --</option>
+                        <option value="User">User</option>
+                        <option value="Application">Application</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Search</h5>
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by ID or data content..." onkeyup="debounceSearch()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="loadEntityData()">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Actions</h5>
+                    <div class="btn-group-vertical w-100" role="group">
+                        <div class="btn-group mb-2" role="group">
+                            <button type="button" class="btn btn-primary" onclick="transformSelected('all')" id="transformAllBtn" disabled>
+                                <i class="bi bi-arrow-left-right"></i> Transform Selected (All Rules)
+                            </button>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="transformRuleBtn" disabled>
+                                    <i class="bi bi-funnel"></i> Transform Selected (Per Rule)
+                                </button>
+                                <ul class="dropdown-menu" id="rulesDropdown">
+                                    <li><a class="dropdown-item" href="#" onclick="return false;">Loading rules...</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-success" onclick="runTestJob('user-management')" id="testUserMgmtBtn">
+                                <i class="bi bi-play-circle"></i> Test User Management
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="runTestJob('discovery')" id="testDiscoveryBtn">
+                                <i class="bi bi-compass"></i> Test Discovery Service
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data View Toggle -->
+    <div class="row mb-3">
+        <div class="col">
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="dataView" id="viewRaw" value="raw" checked onchange="loadEntityData()">
+                <label class="btn btn-outline-primary" for="viewRaw">
+                    <i class="bi bi-file-earmark-code"></i> Raw Data
+                </label>
+                <input type="radio" class="btn-check" name="dataView" id="viewTransformed" value="transformed" onchange="loadEntityData()">
+                <label class="btn btn-outline-primary" for="viewTransformed">
+                    <i class="bi bi-arrow-left-right"></i> Transformed Data
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Entity Data</h5>
+                    <div>
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        <label for="selectAll" class="ms-2">Select All</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading data...</p>
+                    </div>
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="dataTable">
+                            <thead id="tableHead">
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="headerSelectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>Entity Type</th>
+                                    <th>Source ID</th>
+                                    <th>Data</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-5">
+                                        Select an entity type or search to load data
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center" id="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JSON Viewer Modal -->
+<div class="modal fade" id="jsonModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jsonModalTitle">JSON Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="jsonContent" class="bg-light p-3 rounded" style="max-height: 500px; overflow-y: auto;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<script>
+    let currentPage = 1;
+    let currentPageSize = 20;
+    let currentEntityType = '';
+    let currentSearch = '';
+    let currentView = 'raw';
+    let selectedIds = new Set();
+    let allRules = [];
+
+    // Debounce search input
+    let searchTimeout;
+    function debounceSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            loadEntityData();
+        }, 500);
+    }
+
+    // Load entity data
+    async function loadEntityData() {
+        const entityTypeSelect = document.getElementById('entityTypeSelect');
+        const searchInput = document.getElementById('searchInput');
+        const viewRaw = document.getElementById('viewRaw');
+        
+        currentEntityType = entityTypeSelect.value;
+        currentSearch = searchInput.value;
+        currentView = viewRaw.checked ? 'raw' : 'transformed';
+
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const tableBody = document.getElementById('tableBody');
+
+        loadingIndicator.style.display = 'block';
+        errorMessage.style.display = 'none';
+        tableBody.innerHTML = '';
+
+        try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                pageSize: currentPageSize
+            });
+
+            if (currentEntityType) {
+                params.append('entityType', currentEntityType);
+            }
+            if (currentSearch) {
+                params.append('search', currentSearch);
+            }
+
+            const endpoint = currentView === 'raw' ? '/api/entity-data/raw' : '/api/entity-data/transformed';
+            const response = await fetch(`${endpoint}?${params}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            displayData(data);
+            updatePagination(data);
+            loadRules(); // Load rules for dropdown
+        } catch (error) {
+            console.error('Error loading data:', error);
+            errorMessage.textContent = `Error loading data: ${error.message}`;
+            errorMessage.style.display = 'block';
+        } finally {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+
+    // Display data in table
+    function displayData(data) {
+        const tableBody = document.getElementById('tableBody');
+        tableBody.innerHTML = '';
+
+        if (!data.Items || data.Items.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5">No data found</td></tr>';
+            return;
+        }
+
+        data.Items.forEach(item => {
+            const row = document.createElement('tr');
+            const isSelected = selectedIds.has(item.Id);
+            
+            const dataPreview = JSON.stringify(item.Data || item.RawData || item.TransformedData || {}, null, 2);
+            const dataPreviewShort = dataPreview.length > 100 ? dataPreview.substring(0, 100) + '...' : dataPreview;
+            
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" class="row-checkbox" value="${item.Id}" ${isSelected ? 'checked' : ''} onchange="toggleRowSelection(${item.Id})">
+                </td>
+                <td>${item.Id}</td>
+                <td><span class="badge bg-info">${item.EntityType}</span></td>
+                <td><code>${item.SourceId || item.SourceItemId || 'N/A'}</code></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="showJsonModal('${escapeHtml(dataPreview)}', '${item.EntityType} - ${item.Id}')">
+                        <i class="bi bi-eye"></i> View JSON
+                    </button>
+                    <small class="d-block text-muted mt-1" style="font-family: monospace; font-size: 0.8em;">${escapeHtml(dataPreviewShort)}</small>
+                </td>
+                <td>${formatDate(item.CreatedAt || item.TransformedAt)}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Update pagination
+    function updatePagination(data) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        if (data.TotalPages <= 1) return;
+
+        // Previous button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Previous</a>`;
+        pagination.appendChild(prevLi);
+
+        // Page numbers
+        for (let i = 1; i <= data.TotalPages; i++) {
+            if (i === 1 || i === data.TotalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>`;
+                pagination.appendChild(li);
+            } else if (i === currentPage - 3 || i === currentPage + 3) {
+                const li = document.createElement('li');
+                li.className = 'page-item disabled';
+                li.innerHTML = '<span class="page-link">...</span>';
+                pagination.appendChild(li);
+            }
+        }
+
+        // Next button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === data.TotalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Next</a>`;
+        pagination.appendChild(nextLi);
+    }
+
+    // Change page
+    function changePage(page) {
+        currentPage = page;
+        loadEntityData();
+    }
+
+    // Toggle row selection
+    function toggleRowSelection(id) {
+        if (selectedIds.has(id)) {
+            selectedIds.delete(id);
+        } else {
+            selectedIds.add(id);
+        }
+        updateActionButtons();
+    }
+
+    // Toggle select all
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll').checked || document.getElementById('headerSelectAll').checked;
+        document.getElementById('selectAll').checked = selectAll;
+        document.getElementById('headerSelectAll').checked = selectAll;
+
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = selectAll;
+            const id = parseInt(cb.value);
+            if (selectAll) {
+                selectedIds.add(id);
+            } else {
+                selectedIds.delete(id);
+            }
+        });
+        updateActionButtons();
+    }
+
+    // Update action buttons state
+    function updateActionButtons() {
+        const hasSelection = selectedIds.size > 0;
+        document.getElementById('transformAllBtn').disabled = !hasSelection;
+        document.getElementById('transformRuleBtn').disabled = !hasSelection;
+    }
+
+    // Load transformation rules
+    async function loadRules() {
+        try {
+            const params = new URLSearchParams();
+            if (currentEntityType) {
+                // Map entity type to inventory type ID
+                const inventoryTypeId = currentEntityType === 'User' ? 1 : currentEntityType === 'Application' ? 2 : null;
+                if (inventoryTypeId) {
+                    params.append('inventoryTypeId', inventoryTypeId);
+                }
+            }
+
+            const response = await fetch(`/api/transformation-rules?${params}`);
+            if (response.ok) {
+                allRules = await response.json();
+                updateRulesDropdown();
+            }
+        } catch (error) {
+            console.error('Error loading rules:', error);
+        }
+    }
+
+    // Update rules dropdown
+    function updateRulesDropdown() {
+        const dropdown = document.getElementById('rulesDropdown');
+        dropdown.innerHTML = '';
+
+        if (allRules.length === 0) {
+            dropdown.innerHTML = '<li><a class="dropdown-item" href="#" onclick="return false;">No rules available</a></li>';
+            return;
+        }
+
+        allRules.forEach(rule => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a class="dropdown-item" href="#" onclick="transformSelected('${rule.RuleName}'); return false;">${rule.RuleName} (${rule.RuleType})</a>`;
+            dropdown.appendChild(li);
+        });
+    }
+
+    // Transform selected items
+    async function transformSelected(ruleName) {
+        if (selectedIds.size === 0) {
+            alert('Please select at least one item to transform');
+            return;
+        }
+
+        if (!confirm(`Transform ${selectedIds.size} selected item(s)${ruleName === 'all' ? ' with all rules' : ` with rule "${ruleName}"`}?`)) {
+            return;
+        }
+
+        const transformAllBtn = document.getElementById('transformAllBtn');
+        const transformRuleBtn = document.getElementById('transformRuleBtn');
+        transformAllBtn.disabled = true;
+        transformRuleBtn.disabled = true;
+        transformAllBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Transforming...';
+        transformRuleBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Transforming...';
+
+        try {
+            const request = {
+                RawDataIds: Array.from(selectedIds),
+                RuleNames: ruleName === 'all' ? null : [ruleName]
+            };
+
+            const response = await fetch('/api/entity-data/transform', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(request)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Transformation failed');
+            }
+
+            const result = await response.json();
+            alert(`Transformation completed:\n- Successful: ${result.Successful}\n- Failed: ${result.Failed}`);
+            
+            // Clear selection and reload data
+            selectedIds.clear();
+            document.getElementById('selectAll').checked = false;
+            document.getElementById('headerSelectAll').checked = false;
+            loadEntityData();
+        } catch (error) {
+            console.error('Error transforming data:', error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            transformAllBtn.disabled = false;
+            transformRuleBtn.disabled = false;
+            transformAllBtn.innerHTML = '<i class="bi bi-arrow-left-right"></i> Transform Selected (All Rules)';
+            transformRuleBtn.innerHTML = '<i class="bi bi-funnel"></i> Transform Selected (Per Rule)';
+            updateActionButtons();
+        }
+    }
+
+    // Show JSON modal
+    function showJsonModal(jsonContent, title) {
+        document.getElementById('jsonModalTitle').textContent = title;
+        document.getElementById('jsonContent').textContent = jsonContent;
+        new bootstrap.Modal(document.getElementById('jsonModal')).show();
+    }
+
+    // Utility functions
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    }
+
+    // Run test job from external service
+    async function runTestJob(source) {
+        const btnId = source === 'user-management' ? 'testUserMgmtBtn' : 'testDiscoveryBtn';
+        const btn = document.getElementById(btnId);
+        const originalText = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Running...';
+
+        try {
+            const endpoint = source === 'user-management' 
+                ? '/api/entity-test-jobs/test-user-management'
+                : '/api/entity-test-jobs/test-discovery-service';
+            
+            const request = {
+                EntityType: currentEntityType || 'User',
+                Limit: 10,
+                RuleNames: null
+            };
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(request)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Test job failed');
+            }
+
+            const result = await response.json();
+            
+            // Show results in a modal or alert
+            showTestJobResults(result, source);
+        } catch (error) {
+            console.error('Error running test job:', error);
+            alert(`Error running test job: ${error.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    // Show test job results
+    function showTestJobResults(result, source) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Test Job Results - ${source === 'user-management' ? 'User Management Service' : 'Discovery Service'}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <strong>Summary:</strong><br>
+                            Total Processed: ${result.TotalProcessed}<br>
+                            Successful: <span class="text-success">${result.Successful}</span><br>
+                            Failed: <span class="text-danger">${result.Failed}</span>
+                        </div>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Entity ID</th>
+                                        <th>Status</th>
+                                        <th>Duration</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${result.Results.map(r => `
+                                        <tr>
+                                            <td>${r.EntityId}</td>
+                                            <td><span class="badge ${r.Success ? 'bg-success' : 'bg-danger'}">${r.Success ? 'Success' : 'Failed'}</span></td>
+                                            <td>${r.DurationMs}ms</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewTestResult(${r.EntityId}, '${escapeHtml(JSON.stringify(r))}')">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    }
+
+    // View test result details
+    function viewTestResult(entityId, resultJson) {
+        const result = JSON.parse(resultJson);
+        const content = `
+            <strong>Entity ID:</strong> ${result.EntityId}<br>
+            <strong>Entity Type:</strong> ${result.EntityType}<br>
+            <strong>Source:</strong> ${result.Source}<br>
+            <strong>Status:</strong> <span class="badge ${result.Success ? 'bg-success' : 'bg-danger'}">${result.Success ? 'Success' : 'Failed'}</span><br>
+            <strong>Duration:</strong> ${result.DurationMs}ms<br>
+            ${result.RulesApplied && result.RulesApplied.length > 0 ? `<strong>Rules Applied:</strong> ${result.RulesApplied.join(', ')}<br>` : ''}
+            ${result.ErrorMessage ? `<strong>Error:</strong> ${result.ErrorMessage}<br>` : ''}
+            <hr>
+            <strong>Raw Data:</strong>
+            <pre class="bg-light p-2 rounded mt-2" style="max-height: 200px; overflow-y: auto;">${formatJson(result.RawData)}</pre>
+            <strong>Transformed Data:</strong>
+            <pre class="bg-light p-2 rounded mt-2" style="max-height: 200px; overflow-y: auto;">${formatJson(result.TransformedData)}</pre>
+        `;
+        showJsonModal(content, `Test Result - Entity ${entityId}`);
+    }
+
+    function formatJson(jsonString) {
+        if (!jsonString) return 'N/A';
+        try {
+            return JSON.stringify(JSON.parse(jsonString), null, 2);
+        } catch {
+            return jsonString;
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRules();
+    });
+</script>
+}
+

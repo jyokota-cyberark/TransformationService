@@ -1,0 +1,93 @@
+version: 2
+
+sources:
+  - name: inventory
+    description: Raw inventory system data
+    tables:
+      - name: users
+        description: Raw user records from inventory service
+        columns:
+          - name: id
+            description: Unique user identifier
+            tests:
+              - not_null
+              - unique
+          - name: email
+            description: User email address
+            tests:
+              - not_null
+              - unique
+          - name: status
+            description: User status (ACTIVE, INACTIVE, SUSPENDED)
+
+      - name: applications
+        description: Raw application records
+        columns:
+          - name: id
+            description: Unique application identifier
+            tests:
+              - not_null
+              - unique
+          - name: name
+            description: Application name
+            tests:
+              - not_null
+          - name: owner_user_id
+            description: Reference to owning user
+
+models:
+  - name: stg_users
+    description: Staged and cleaned user data
+    columns:
+      - name: id
+        description: User ID
+      - name: email_normalized
+        description: Normalized email address
+      - name: department_code
+        description: Mapped department code
+      - name: status
+        description: User status (uppercase)
+
+  - name: fct_users
+    description: User fact table with core attributes
+    columns:
+      - name: id
+        description: User ID
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: User email
+        tests:
+          - unique
+          - not_null
+      - name: is_active
+        description: Flag indicating if user is active
+        tests:
+          - accepted_values:
+              values: [0, 1]
+
+  - name: stg_applications
+    description: Staged and cleaned application data
+    columns:
+      - name: id
+        description: Application ID
+      - name: app_name
+        description: Application name
+      - name: status
+        description: Application status
+
+  - name: fct_applications
+    description: Application fact table with owner information
+    columns:
+      - name: id
+        description: Application ID
+        tests:
+          - unique
+          - not_null
+      - name: app_name
+        description: Application name
+        tests:
+          - not_null
+      - name: owner_email
+        description: Owner email address

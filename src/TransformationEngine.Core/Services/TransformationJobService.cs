@@ -13,17 +13,20 @@ public class TransformationJobService : ITransformationJobService
 {
     private readonly ITransformationJobRepository _repository;
     private readonly ISparkJobSubmissionService _sparkService;
+    private readonly ISparkJobLibraryService _sparkLibraryService;
     private readonly ITransformationEngine<Dictionary<string, object?>> _engine;
     private readonly ILogger<TransformationJobService> _logger;
 
     public TransformationJobService(
         ITransformationJobRepository repository,
         ISparkJobSubmissionService sparkService,
+        ISparkJobLibraryService sparkLibraryService,
         ITransformationEngine<Dictionary<string, object?>> engine,
         ILogger<TransformationJobService> logger)
     {
         _repository = repository;
         _sparkService = sparkService;
+        _sparkLibraryService = sparkLibraryService;
         _engine = engine;
         _logger = logger;
     }
@@ -183,19 +186,55 @@ public class TransformationJobService : ITransformationJobService
     {
         try
         {
-            var sparkRequest = new SparkJobSubmissionRequest
+            // If SparkJobDefinitionId is provided, look up the job definition
+            if (request.SparkConfig?.SparkJobDefinitionId.HasValue == true)
             {
-                JobId = jobId,
-                JarPath = request.SparkConfig?.JarPath,
-                MainClass = request.SparkConfig?.MainClass,
-                ExecutorCores = request.SparkConfig?.ExecutorCores ?? 2,
-                ExecutorMemory = (request.SparkConfig?.ExecutorMemoryGb ?? 2) * 1024,
-                NumExecutors = request.SparkConfig?.NumExecutors ?? 2,
-                AdditionalOptions = request.SparkConfig?.AdditionalArgs
-            };
+                var jobDefinition = await _sparkLibraryService.GetJobByIdAsync(request.SparkConfig.SparkJobDefinitionId.Value);
+                if (jobDefinition == null)
+                {
+                    throw new ArgumentException($"Spark job definition {request.SparkConfig.SparkJobDefinitionId} not found");
+                }
 
-            await _sparkService.SubmitJobAsync(sparkRequest);
-            await UpdateJobStatusAsync(jobId, "Running", "Job submitted to Spark cluster");
+                // Build request from job definition
+                var sparkRequest = new SparkJobSubmissionRequest
+                {
+                    JobId = jobId,
+                    Language = jobDefinition.Language,
+                    JarPath = jobDefinition.CompiledArtifactPath?.Contains(".jar") == true ? jobDefinition.CompiledArtifactPath : null,
+                    PythonScript = jobDefinition.PyFile,
+                    DllPath = jobDefinition.CompiledArtifactPath?.Contains(".dll") == true ? jobDefinition.CompiledArtifactPath : null,
+                    MainClass = jobDefinition.MainClass,
+                    EntryPoint = jobDefinition.EntryPoint,
+                    ExecutorCores = request.SparkConfig.ExecutorCores > 0 ? request.SparkConfig.ExecutorCores : jobDefinition.DefaultExecutorCores,
+                    ExecutorMemory = request.SparkConfig.ExecutorMemoryGb > 0 ? request.SparkConfig.ExecutorMemoryGb * 1024 : jobDefinition.DefaultExecutorMemoryMb,
+                    NumExecutors = request.SparkConfig.NumExecutors > 0 ? request.SparkConfig.NumExecutors : jobDefinition.DefaultNumExecutors,
+                    AdditionalOptions = request.SparkConfig.AdditionalArgs
+                };
+
+                await _sparkService.SubmitJobAsync(sparkRequest);
+                await UpdateJobStatusAsync(jobId, "Running", "Job submitted to Spark cluster");
+            }
+            else
+            {
+                // Use direct configuration
+                var sparkRequest = new SparkJobSubmissionRequest
+                {
+                    JobId = jobId,
+                    Language = request.SparkConfig?.Language ?? "Python",
+                    JarPath = request.SparkConfig?.JarPath,
+                    PythonScript = request.SparkConfig?.PythonScript,
+                    DllPath = request.SparkConfig?.DllPath,
+                    MainClass = request.SparkConfig?.MainClass,
+                    EntryPoint = request.SparkConfig?.EntryPoint,
+                    ExecutorCores = request.SparkConfig?.ExecutorCores ?? 2,
+                    ExecutorMemory = (request.SparkConfig?.ExecutorMemoryGb ?? 2) * 1024,
+                    NumExecutors = request.SparkConfig?.NumExecutors ?? 2,
+                    AdditionalOptions = request.SparkConfig?.AdditionalArgs
+                };
+
+                await _sparkService.SubmitJobAsync(sparkRequest);
+                await UpdateJobStatusAsync(jobId, "Running", "Job submitted to Spark cluster");
+            }
         }
         catch (Exception ex)
         {

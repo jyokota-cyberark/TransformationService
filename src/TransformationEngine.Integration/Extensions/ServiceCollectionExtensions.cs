@@ -7,6 +7,7 @@ using TransformationEngine.Integration.Data;
 using TransformationEngine.Integration.Services;
 using TransformationEngine.Sidecar;
 using TransformationEngine.Services;
+using TransformationEngine.Interfaces.Services;
 
 namespace TransformationEngine.Integration.Extensions;
 
@@ -57,6 +58,15 @@ public static class ServiceCollectionExtensions
             return new SparkJobSubmissionService(cfg, logger);
         });
 
+        // Note: Transformation Job services (ITransformationJobService) should be registered
+        // in the service layer (TransformationEngine.Service) which has access to:
+        // - ITransformationJobRepository
+        // - ITransformationEngine<Dictionary<string, object?>>
+        // - ISparkJobLibraryService
+        // 
+        // The Integration layer does not register these to avoid circular dependencies
+        // and to keep concerns separated. Only use services that don't require the full service layer.
+
         // Register mode-specific services
         if (options.EnableSidecar)
         {
@@ -78,6 +88,12 @@ public static class ServiceCollectionExtensions
 
         // Register main service
         services.AddScoped<IIntegratedTransformationService, IntegratedTransformationService>();
+
+        // Register shared management services for UI consumption
+        services.AddScoped<IJobQueueManagementService, JobQueueManagementService>();
+        services.AddScoped<IHistoryQueryService, HistoryQueryService>();
+        services.AddScoped<IDebugService, DebugService>();
+        services.AddScoped<IJobOrchestrationService, JobOrchestrationService>();
 
         // Register background services
         if (options.EnableQueueProcessor)

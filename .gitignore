@@ -13,6 +13,7 @@ whitesource/
 .idea/
 Core/dotnetcore/
 *.crx
+*.log
 Azure/Azure/csx/
 localshell/node_modules/
 cloud.sublime-workspace

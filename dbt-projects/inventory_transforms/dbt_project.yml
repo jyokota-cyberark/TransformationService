@@ -1,0 +1,33 @@
+name: 'inventory_transforms'
+version: '1.0.0'
+config-version: 2
+
+profile: 'inventory_transforms'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  inventory_transforms:
+    staging:
+      +materialized: view
+      +tags: ["staging"]
+    core:
+      +materialized: table
+      +tags: ["core"]
+
+vars:
+  # Default variables for transformations
+  entity_type: "users"
+  cutoff_date: "1900-01-01"
+  current_date: "{{ run_started_at.strftime('%Y-%m-%d') }}"
+  enable_incremental: true

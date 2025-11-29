@@ -37,19 +37,34 @@ public class SparkJobSubmissionRequest
     public string JobId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Path to JAR file (relative to /opt/spark-jobs)
+    /// Language of the job: CSharp, Python, Scala
+    /// </summary>
+    public string Language { get; set; } = "Python";
+
+    /// <summary>
+    /// Path to JAR file (relative to /opt/spark-jobs) - for Scala/Java
     /// </summary>
     public string? JarPath { get; set; }
 
     /// <summary>
-    /// Path to Python script (relative to /opt/spark-jobs)
+    /// Path to Python script (relative to /opt/spark-jobs) - for PySpark
     /// </summary>
     public string? PythonScript { get; set; }
 
     /// <summary>
-    /// Main class to execute (for JARs)
+    /// Path to .NET DLL (relative to /opt/spark-jobs) - for Spark.NET
+    /// </summary>
+    public string? DllPath { get; set; }
+
+    /// <summary>
+    /// Main class to execute (for JARs/Scala)
     /// </summary>
     public string? MainClass { get; set; }
+
+    /// <summary>
+    /// Entry point class for .NET jobs
+    /// </summary>
+    public string? EntryPoint { get; set; }
 
     /// <summary>
     /// Number of executor cores
@@ -60,6 +75,11 @@ public class SparkJobSubmissionRequest
     /// Executor memory in MB
     /// </summary>
     public int ExecutorMemory { get; set; } = 2048;
+
+    /// <summary>
+    /// Driver memory in MB
+    /// </summary>
+    public int DriverMemory { get; set; } = 1024;
 
     /// <summary>
     /// Number of executors
@@ -75,6 +95,16 @@ public class SparkJobSubmissionRequest
     /// Additional spark-submit options
     /// </summary>
     public Dictionary<string, string>? AdditionalOptions { get; set; }
+
+    /// <summary>
+    /// Additional Python packages to install (for PySpark)
+    /// </summary>
+    public string[]? PythonPackages { get; set; }
+
+    /// <summary>
+    /// Additional JARs/DLLs dependencies
+    /// </summary>
+    public string[]? Dependencies { get; set; }
 }
 
 /// <summary>
@@ -245,29 +275,50 @@ public class SparkJobSubmissionService : ISparkJobSubmissionService
 
     private string GetJobPath(SparkJobSubmissionRequest request)
     {
-        if (!string.IsNullOrEmpty(request.JarPath))
-            return $"/opt/spark-jobs/{request.JarPath}";
-        
-        if (!string.IsNullOrEmpty(request.PythonScript))
-            return $"/opt/spark-jobs/{request.PythonScript}";
-
-        throw new ArgumentException("Either JarPath or PythonScript must be provided");
+        return request.Language.ToLower() switch
+        {
+            "scala" when !string.IsNullOrEmpty(request.JarPath) => $"/opt/spark-jobs/{request.JarPath}",
+            "python" when !string.IsNullOrEmpty(request.PythonScript) => $"/opt/spark-jobs/{request.PythonScript}",
+            "csharp" when !string.IsNullOrEmpty(request.DllPath) => $"/opt/spark-jobs/{request.DllPath}",
+            _ => throw new ArgumentException($"Invalid job path for language {request.Language}")
+        };
     }
 
     private string BuildSparkSubmitCommand(SparkJobSubmissionRequest request, string jobPath)
     {
         var args = new StringBuilder();
 
+        // Different command for .NET Spark
+        if (request.Language.ToLower() == "csharp")
+        {
+            return BuildDotNetSparkCommand(request, jobPath);
+        }
+
         args.Append($"spark-submit");
         args.Append($" --master {_sparkMasterUrl}");
         args.Append($" --executor-cores {request.ExecutorCores}");
         args.Append($" --executor-memory {request.ExecutorMemory}m");
+        args.Append($" --driver-memory {request.DriverMemory}m");
         args.Append($" --num-executors {request.NumExecutors}");
 
-        // Add main class for JAR files
+        // Add main class for JAR files (Scala/Java)
         if (!string.IsNullOrEmpty(request.MainClass))
         {
             args.Append($" --class {request.MainClass}");
+        }
+
+        // Add dependencies
+        if (request.Dependencies != null && request.Dependencies.Length > 0)
+        {
+            var depsPath = string.Join(",", request.Dependencies.Select(d => $"/opt/spark-jobs/{d}"));
+            args.Append($" --jars {depsPath}");
+        }
+
+        // Add Python packages
+        if (request.Language.ToLower() == "python" && request.PythonPackages != null && request.PythonPackages.Length > 0)
+        {
+            var packages = string.Join(",", request.PythonPackages);
+            args.Append($" --py-files {packages}");
         }
 
         // Add any additional options
@@ -280,6 +331,46 @@ public class SparkJobSubmissionService : ISparkJobSubmissionService
         }
 
         args.Append($" {jobPath}");
+
+        // Add job arguments
+        if (request.Arguments != null)
+        {
+            foreach (var arg in request.Arguments)
+            {
+                args.Append($" {arg}");
+            }
+        }
+
+        return args.ToString();
+    }
+
+    private string BuildDotNetSparkCommand(SparkJobSubmissionRequest request, string dllPath)
+    {
+        var args = new StringBuilder();
+
+        // Microsoft Spark .NET uses spark-submit with microsoft-spark JAR
+        args.Append($"spark-submit");
+        args.Append($" --master {_sparkMasterUrl}");
+        args.Append($" --executor-cores {request.ExecutorCores}");
+        args.Append($" --executor-memory {request.ExecutorMemory}m");
+        args.Append($" --driver-memory {request.DriverMemory}m");
+        args.Append($" --num-executors {request.NumExecutors}");
+
+        // Microsoft Spark JAR (should be pre-installed in the container)
+        args.Append($" --class org.apache.spark.deploy.dotnet.DotnetRunner");
+        args.Append($" /opt/spark/jars/microsoft-spark-*.jar");
+
+        // Add any additional options
+        if (request.AdditionalOptions != null)
+        {
+            foreach (var option in request.AdditionalOptions)
+            {
+                args.Append($" {option.Key} {option.Value}");
+            }
+        }
+
+        // .NET DLL path
+        args.Append($" {dllPath}");
 
         // Add job arguments
         if (request.Arguments != null)

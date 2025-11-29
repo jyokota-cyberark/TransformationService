@@ -28,8 +28,13 @@ public static class SidecarServiceCollectionExtensions
         // Register in-memory repository for sidecar scenarios
         services.AddScoped<ITransformationJobRepository, InMemoryTransformationJobRepository>();
 
-        // Register job service for sidecar
-        services.AddScoped<ITransformationJobService, TransformationJobService>();
+        // Only register TransformationJobService if ISparkJobLibraryService is available
+        // This allows sidecar to work in minimal configurations (e.g., InventoryService, UserManagementService)
+        // while still supporting full job services when SparkJobLibraryService is registered
+        if (services.Any(x => x.ServiceType == typeof(ISparkJobLibraryService)))
+        {
+            services.AddScoped<ITransformationJobService, TransformationJobService>();
+        }
 
         return services;
     }

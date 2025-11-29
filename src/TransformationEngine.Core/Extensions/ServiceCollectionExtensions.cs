@@ -51,9 +51,10 @@ public static class ServiceCollectionExtensions
         {
             var repository = sp.GetRequiredService<ITransformationJobRepository>();
             var sparkService = sp.GetRequiredService<ISparkJobSubmissionService>();
+            var sparkLibraryService = sp.GetRequiredService<ISparkJobLibraryService>();
             var engine = sp.GetRequiredService<ITransformationEngine<Dictionary<string, object?>>>();
             var logger = sp.GetRequiredService<ILogger<TransformationJobService>>();
-            return new TransformationJobService(repository, sparkService, engine, logger);
+            return new TransformationJobService(repository, sparkService, sparkLibraryService, engine, logger);
         });
 
         return services;
