@@ -50,11 +50,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITransformationJobService>(sp =>
         {
             var repository = sp.GetRequiredService<ITransformationJobRepository>();
-            var sparkService = sp.GetRequiredService<ISparkJobSubmissionService>();
-            var sparkLibraryService = sp.GetRequiredService<ISparkJobLibraryService>();
             var engine = sp.GetRequiredService<ITransformationEngine<Dictionary<string, object?>>>();
             var logger = sp.GetRequiredService<ILogger<TransformationJobService>>();
-            return new TransformationJobService(repository, sparkService, sparkLibraryService, engine, logger);
+            
+            // Spark services are optional
+            var sparkService = sp.GetService<ISparkJobSubmissionService>();
+            var sparkLibraryService = sp.GetService<ISparkJobLibraryService>();
+            
+            return new TransformationJobService(repository, engine, logger, sparkService, sparkLibraryService);
         });
 
         return services;

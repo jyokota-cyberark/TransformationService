@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -12,12 +12,12 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-    <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TransformationEngine\TransformationEngine.csproj" />
+    <ProjectReference Include="..\TransformationEngine.Core\TransformationEngine.Core.csproj" />
+    <ProjectReference Include="..\TransformationEngine.Integration\TransformationEngine.Integration.csproj" />
   </ItemGroup>
 
 </Project>

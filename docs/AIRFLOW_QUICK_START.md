@@ -658,7 +658,7 @@ Comprehensive testing before production deployment.
   def test_rule_engine_operator():
       operator = RuleEngineOperator(
           task_id='test',
-          transformation_service_url='http://localhost:5000',
+          transformation_service_url='http://localhost:5003',
           entity_type='User',
           rules=['test_rule'],
       )

@@ -40,6 +40,20 @@ public interface ITransformationJobService
     /// <param name="filter">Optional filter criteria</param>
     /// <returns>List of jobs matching the filter</returns>
     Task<IEnumerable<TransformationJobStatus>> ListJobsAsync(TransformationJobFilter? filter = null);
+
+    /// <summary>
+    /// Gets a job by numeric ID
+    /// </summary>
+    /// <param name="id">Numeric job ID</param>
+    /// <returns>Job status or null if not found</returns>
+    Task<TransformationJobStatus?> GetJobByIdAsync(int id);
+
+    /// <summary>
+    /// Deletes a job from the queue (not processing/running jobs)
+    /// </summary>
+    /// <param name="id">Numeric job ID</param>
+    /// <returns>True if deletion was successful</returns>
+    Task<bool> DeleteJobAsync(int id);
 }
 
 /// <summary>

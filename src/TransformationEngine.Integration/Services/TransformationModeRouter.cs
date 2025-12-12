@@ -56,6 +56,10 @@ public class TransformationModeRouter
             mode = preferredMode;
         }
 
+        _logger.LogInformation(
+            "Executing transformation for {EntityType} {EntityId} using mode {Mode}. Sidecar service available: {SidecarAvailable}",
+            request.EntityType, request.EntityId, mode, _sidecarService != null);
+
         try
         {
             var result = mode switch
@@ -121,12 +125,15 @@ public class TransformationModeRouter
         List<TransformationRule> rules,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation("ExecuteSidecarAsync called. Sidecar service is null: {IsNull}", _sidecarService == null);
+        
         if (_sidecarService == null)
         {
             throw new InvalidOperationException("Sidecar transformation service is not configured");
         }
 
-        _logger.LogDebug("Executing sidecar transformation for entity type {EntityType}", request.EntityType);
+        _logger.LogInformation("Executing sidecar transformation for entity type {EntityType} with {RuleCount} rules", 
+            request.EntityType, rules.Count);
 
         // Convert rules to format expected by sidecar service
         var jobRequest = CreateSidecarJobRequest(request, rules);

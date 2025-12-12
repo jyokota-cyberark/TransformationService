@@ -6,9 +6,14 @@ namespace TransformationEngine.Integration.Models;
 public class TransformationJobQueue
 {
     /// <summary>
-    /// Job ID
+    /// Database ID (auto-increment)
     /// </summary>
     public int Id { get; set; }
+
+    /// <summary>
+    /// Job ID (GUID string for tracking)
+    /// </summary>
+    public string JobId { get; set; } = string.Empty;
 
     /// <summary>
     /// Entity type
@@ -59,6 +64,31 @@ public class TransformationJobQueue
     /// Next retry attempt time
     /// </summary>
     public DateTime? NextRetryAt { get; set; }
+
+    /// <summary>
+    /// Orchestration engine that executed/will execute this job
+    /// </summary>
+    public OrchestrationEngine Engine { get; set; } = OrchestrationEngine.LocalQueue;
+
+    /// <summary>
+    /// External job ID from the orchestration engine (e.g., Spark job ID, Airflow DAG run ID)
+    /// </summary>
+    public string? ExternalJobId { get; set; }
+
+    /// <summary>
+    /// Engine-specific metadata (JSON) - cluster info, progress, etc.
+    /// </summary>
+    public string? ExecutionMetadata { get; set; }
+
+    /// <summary>
+    /// Actual execution start time (different from CreatedAt which is queue time)
+    /// </summary>
+    public DateTime? StartedAt { get; set; }
+
+    /// <summary>
+    /// Execution duration in milliseconds
+    /// </summary>
+    public int? DurationMs { get; set; }
 }
 
 /// <summary>
@@ -71,4 +101,16 @@ public enum JobStatus
     Completed,
     Failed,
     Cancelled
+}
+
+/// <summary>
+/// Orchestration engine type
+/// </summary>
+public enum OrchestrationEngine
+{
+    LocalQueue,
+    Hangfire,
+    Airflow,
+    Spark,
+    Remote
 }

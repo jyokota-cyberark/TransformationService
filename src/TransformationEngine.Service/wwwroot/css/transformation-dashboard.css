@@ -1,0 +1,256 @@
+/* Transformation Dashboard Styles */
+
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-left: 4px solid #667eea;
+    padding: 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+}
+
+.stat-card.success { border-left-color: #28a745; }
+.stat-card.warning { border-left-color: #ffc107; }
+.stat-card.danger { border-left-color: #dc3545; }
+.stat-card.info { border-left-color: #17a2b8; }
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.job-timeline {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.job-step {
+    display: flex;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.job-step::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 50px;
+    width: 2px;
+    height: 50px;
+    background: #e9ecef;
+}
+
+.job-step:last-child::before {
+    display: none;
+}
+
+.step-indicator {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-weight: bold;
+    font-size: 0.8rem;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.step-indicator.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.step-indicator.completed {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.step-indicator.failed {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.step-content {
+    flex: 1;
+    background: white;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.step-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.step-time {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.progress-bar-animated-step {
+    animation: step-pulse 2s infinite;
+}
+
+@keyframes step-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.job-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.job-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.job-status-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.job-status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.job-status-badge.running {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.job-status-badge.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.job-status-badge.failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.execution-detail {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 1rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+
+.rule-tag {
+    display: inline-block;
+    background: #e7f3ff;
+    color: #0c63e4;
+    padding: 0.3rem 0.6rem;
+    border-radius: 3px;
+    margin: 0.2rem;
+    font-size: 0.85rem;
+}
+
+.transformation-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tab-content {
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.project-pipeline {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.rule-version-history {
+    background: #f8f9fa;
+    border-left: 3px solid #667eea;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+.version-badge {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.gantt-bar {
+    height: 30px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    color: white;
+    font-size: 0.75rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.gantt-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.gantt-label {
+    min-width: 150px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.gantt-timeline {
+    flex: 1;
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-left: 1rem;
+}
+

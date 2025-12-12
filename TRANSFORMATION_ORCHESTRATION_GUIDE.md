@@ -118,7 +118,7 @@ var result = await orchestrationService.SubmitOneTimeJobAsync(new JobSubmissionR
 **Endpoint**: `POST /api/transformation-orchestration/seed-sample-rules`
 
 ```bash
-curl -X POST http://localhost:5000/api/transformation-orchestration/seed-sample-rules
+curl -X POST http://localhost:5003/api/transformation-orchestration/seed-sample-rules
 ```
 
 **Sample Rules Created**:
@@ -136,7 +136,7 @@ curl -X POST http://localhost:5000/api/transformation-orchestration/seed-sample-
 **Endpoint**: `POST /api/transformation-orchestration/jobs/one-time`
 
 ```bash
-curl -X POST http://localhost:5000/api/transformation-orchestration/jobs/one-time \
+curl -X POST http://localhost:5003/api/transformation-orchestration/jobs/one-time \
   -H "Content-Type: application/json" \
   -d '{
     "entityType": "User",
@@ -162,7 +162,7 @@ curl -X POST http://localhost:5000/api/transformation-orchestration/jobs/one-tim
 **Endpoint**: `POST /api/transformation-orchestration/jobs/scheduled`
 
 ```bash
-curl -X POST http://localhost:5000/api/transformation-orchestration/jobs/scheduled \
+curl -X POST http://localhost:5003/api/transformation-orchestration/jobs/scheduled \
   -H "Content-Type: application/json" \
   -d '{
     "entityType": "User",
@@ -184,7 +184,7 @@ curl -X POST http://localhost:5000/api/transformation-orchestration/jobs/schedul
 **Endpoint**: `GET /api/transformation-orchestration/jobs/{jobId}/status`
 
 ```bash
-curl http://localhost:5000/api/transformation-orchestration/jobs/localqueue:123e4567-e89b-12d3-a456-426614174000/status
+curl http://localhost:5003/api/transformation-orchestration/jobs/localqueue:123e4567-e89b-12d3-a456-426614174000/status
 ```
 
 **Response**:
@@ -207,7 +207,7 @@ curl http://localhost:5000/api/transformation-orchestration/jobs/localqueue:123e
 **Endpoint**: `GET /api/transformation-orchestration/engines`
 
 ```bash
-curl http://localhost:5000/api/transformation-orchestration/engines
+curl http://localhost:5003/api/transformation-orchestration/engines
 ```
 
 **Response**:
@@ -338,7 +338,7 @@ Custom JavaScript execution
 POST /api/transformation-orchestration/seed-sample-rules
 
 # View rules in UI
-http://localhost:5000/TransformationRules
+http://localhost:5003/TransformationRules
 
 # Test transformation
 POST /api/transformation-debug/dry-run

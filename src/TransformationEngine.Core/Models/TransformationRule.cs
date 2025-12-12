@@ -20,6 +20,11 @@ public class TransformationRule
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DateTime? LastModifiedDate { get; set; }
     
+    // Versioning fields
+    public int CurrentVersion { get; set; } = 1;
+    public string? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedAt { get; set; }
+    
     // Note: InventoryType navigation property removed to avoid circular dependency
     // The InventoryTypeId foreign key is sufficient for database relationships
 }

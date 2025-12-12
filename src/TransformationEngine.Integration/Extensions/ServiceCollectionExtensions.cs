@@ -2,12 +2,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TransformationEngine.Integration.Configuration;
 using TransformationEngine.Integration.Data;
 using TransformationEngine.Integration.Services;
+using TransformationEngine.Integration.ImportExport;
+using TransformationEngine.Integration.Evaluators;
+using TransformationEngine.Integration.Evaluators.Conditions;
+using TransformationEngine.Integration.Parser;
 using TransformationEngine.Sidecar;
 using TransformationEngine.Services;
 using TransformationEngine.Interfaces.Services;
+using TransformationEngine.Extensions;
 
 namespace TransformationEngine.Integration.Extensions;
 
@@ -40,7 +46,14 @@ public static class ServiceCollectionExtensions
         {
             services.AddDbContext<TransformationIntegrationDbContext>(dbOptions =>
             {
-                dbOptions.UseNpgsql(options.ConnectionString);
+                dbOptions.UseNpgsql(options.ConnectionString, npgsqlOptions =>
+                {
+                    // Allow the calling assembly to provide migrations
+                    if (!string.IsNullOrEmpty(options.MigrationsAssembly))
+                    {
+                        npgsqlOptions.MigrationsAssembly(options.MigrationsAssembly);
+                    }
+                });
             });
         }
 
@@ -49,6 +62,24 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITransformationHealthCheck, TransformationHealthCheck>();
         services.AddScoped<IRuleCacheManager, RuleCacheManager>();
         services.AddScoped<ITransformationConfigRepository, TransformationConfigRepository>();
+
+        // Register Schema Registry service
+        services.AddScoped<ISchemaRegistryService, SchemaRegistryService>();
+
+        // Register Import/Export services
+        services.AddScoped<IRuleExporter, RuleExporter>();
+        services.AddScoped<IRuleImporter, RuleImporter>();
+
+        // Register Permission Evaluator and condition evaluators
+        services.AddScoped<IConditionEvaluatorRegistry, ConditionEvaluatorRegistry>();
+        services.AddScoped<IConditionEvaluator, TemporalConditionEvaluator>();
+        services.AddScoped<IConditionEvaluator, IpConditionEvaluator>();
+        services.AddScoped<IConditionEvaluator, QuotaConditionEvaluator>();
+        services.AddScoped<IConditionEvaluator, AttributeConditionEvaluator>();
+        services.AddScoped<IPermissionEvaluator, PermissionEvaluator>();
+
+        // Register quota service (in-memory implementation)
+        services.AddSingleton<IQuotaService, InMemoryQuotaService>();
 
         // Register Spark job submission service
         services.AddScoped<ISparkJobSubmissionService>(sp =>
@@ -70,7 +101,20 @@ public static class ServiceCollectionExtensions
         // Register mode-specific services
         if (options.EnableSidecar)
         {
-            services.AddTransformationEngineSidecar(options.SidecarConfiguration);
+            // Register core transformation engine first
+            services.AddTransformationEngine<Dictionary<string, object?>>(pipeline =>
+            {
+                options.SidecarConfiguration?.Invoke(pipeline);
+            });
+            
+            // Register dynamic repository based on configuration (hot-swappable!)
+            services.AddScoped<ITransformationJobRepository>(sp =>
+            {
+                return new DynamicTransformationJobRepositoryFactory(sp).GetRepository();
+            });
+            
+            // Register TransformationJobService
+            services.AddScoped<ITransformationJobService, TransformationJobService>();
         }
 
         if (options.EnableExternalApi && !string.IsNullOrEmpty(config.ExternalApiUrl))
@@ -83,8 +127,36 @@ public static class ServiceCollectionExtensions
             });
         }
 
-        // Register mode router
-        services.AddScoped<TransformationModeRouter>();
+        // Register HttpClient for Schema Registry
+        if (!string.IsNullOrEmpty(config.SchemaRegistry?.Url))
+        {
+            services.AddHttpClient("SchemaRegistry", client =>
+            {
+                client.BaseAddress = new Uri(config.SchemaRegistry.Url);
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
+        }
+
+        // Register mode router with explicit dependency resolution
+        services.AddScoped<TransformationModeRouter>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<TransformationModeRouter>>();
+            var config = sp.GetRequiredService<IOptions<TransformationConfiguration>>();
+            var healthCheck = sp.GetRequiredService<ITransformationHealthCheck>();
+            
+            // Try to resolve sidecar service (may be null if not registered)
+            var sidecarService = sp.GetService<ITransformationJobService>();
+            
+            // Try to resolve HTTP client for external API (may be null)
+            HttpClient? httpClient = null;
+            if (!string.IsNullOrEmpty(config.Value.ExternalApiUrl))
+            {
+                var httpClientFactory = sp.GetService<IHttpClientFactory>();
+                httpClient = httpClientFactory?.CreateClient("TransformationEngine");
+            }
+            
+            return new TransformationModeRouter(logger, config, healthCheck, sidecarService, httpClient);
+        });
 
         // Register main service
         services.AddScoped<IIntegratedTransformationService, IntegratedTransformationService>();
@@ -160,6 +232,11 @@ public class TransformationIntegrationOptions
     /// Database connection string
     /// </summary>
     public string? ConnectionString { get; set; }
+
+    /// <summary>
+    /// Assembly name for EF Core migrations (e.g., "UserManagementService")
+    /// </summary>
+    public string? MigrationsAssembly { get; set; }
 
     /// <summary>
     /// Enable sidecar mode

@@ -197,8 +197,7 @@ public class DebugService : IDebugService
             // Validate each rule
             foreach (var rule in rules)
             {
-                if (false) // Skip field validation
-                    result.Errors.Add($"Rule '{rule.RuleName}' has no field name");
+                // Field validation skipped intentionally
 
                 if (string.IsNullOrEmpty(rule.RuleName))
                     result.Errors.Add($"Rule for field '{rule.RuleName}' has no name");

@@ -27,6 +27,17 @@ public class TransformationEngineDbContext : DbContext
     public DbSet<SparkJobTemplate> SparkJobTemplates { get; set; } = null!;
     public DbSet<TransformationRuleToSparkJobMapping> TransformationRuleToSparkJobMappings { get; set; } = null!;
 
+    // Transformation projects
+    public DbSet<TransformationProject> TransformationProjects { get; set; } = null!;
+    public DbSet<TransformationProjectRule> TransformationProjectRules { get; set; } = null!;
+    public DbSet<TransformationProjectExecution> TransformationProjectExecutions { get; set; } = null!;
+
+    // Rule versioning
+    public DbSet<TransformationRuleVersion> TransformationRuleVersions { get; set; } = null!;
+
+    // Airflow DAG definitions
+    public DbSet<AirflowDagDefinition> AirflowDagDefinitions { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -253,6 +264,96 @@ public class TransformationEngineDbContext : DbContext
             entity.HasIndex(e => e.EntityType);
             entity.HasIndex(e => e.JobDefinitionId);
             entity.HasIndex(e => e.RuleSetHash);
+        });
+
+        // Configure TransformationProject
+        modelBuilder.Entity<TransformationProject>(entity =>
+        {
+            entity.ToTable("TransformationProjects");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Configuration).HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasIndex(e => e.EntityType);
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // Configure TransformationProjectRule
+        modelBuilder.Entity<TransformationProjectRule>(entity =>
+        {
+            entity.ToTable("TransformationProjectRules");
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Project)
+                .WithMany(p => p.ProjectRules)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Rule)
+                .WithMany()
+                .HasForeignKey(e => e.RuleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.RuleId);
+            entity.HasIndex(e => new { e.ProjectId, e.RuleId }).IsUnique();
+        });
+
+        // Configure TransformationProjectExecution
+        modelBuilder.Entity<TransformationProjectExecution>(entity =>
+        {
+            entity.ToTable("TransformationProjectExecutions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ExecutionMetadata).HasColumnType("jsonb");
+            entity.HasOne(e => e.Project)
+                .WithMany(p => p.Executions)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.ExecutionId).IsUnique();
+            entity.HasIndex(e => e.StartedAt);
+        });
+
+        // Configure TransformationRuleVersion
+        modelBuilder.Entity<TransformationRuleVersion>(entity =>
+        {
+            entity.ToTable("TransformationRuleVersions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.RuleType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Configuration).IsRequired().HasColumnType("jsonb");
+            entity.Property(e => e.ChangeType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasOne(e => e.Rule)
+                .WithMany()
+                .HasForeignKey(e => e.RuleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.RuleId);
+            entity.HasIndex(e => new { e.RuleId, e.Version }).IsUnique();
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        // Configure AirflowDagDefinition
+        modelBuilder.Entity<AirflowDagDefinition>(entity =>
+        {
+            entity.ToTable("AirflowDagDefinitions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DagId).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Configuration).HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasOne(e => e.TransformationProject)
+                .WithMany()
+                .HasForeignKey(e => e.TransformationProjectId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.SparkJob)
+                .WithMany()
+                .HasForeignKey(e => e.SparkJobId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(e => e.DagId).IsUnique();
+            entity.HasIndex(e => e.EntityType);
+            entity.HasIndex(e => e.IsActive);
         });
     }
 }

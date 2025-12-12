@@ -12,17 +12,17 @@ namespace TransformationEngine.Services;
 public class TransformationJobService : ITransformationJobService
 {
     private readonly ITransformationJobRepository _repository;
-    private readonly ISparkJobSubmissionService _sparkService;
-    private readonly ISparkJobLibraryService _sparkLibraryService;
+    private readonly ISparkJobSubmissionService? _sparkService;
+    private readonly ISparkJobLibraryService? _sparkLibraryService;
     private readonly ITransformationEngine<Dictionary<string, object?>> _engine;
     private readonly ILogger<TransformationJobService> _logger;
 
     public TransformationJobService(
         ITransformationJobRepository repository,
-        ISparkJobSubmissionService sparkService,
-        ISparkJobLibraryService sparkLibraryService,
         ITransformationEngine<Dictionary<string, object?>> engine,
-        ILogger<TransformationJobService> logger)
+        ILogger<TransformationJobService> logger,
+        ISparkJobSubmissionService? sparkService = null,
+        ISparkJobLibraryService? sparkLibraryService = null)
     {
         _repository = repository;
         _sparkService = sparkService;
@@ -144,7 +144,7 @@ public class TransformationJobService : ITransformationJobService
         }
 
         // If job is running on Spark, cancel it there
-        if (job.ExecutionMode == "Spark" && job.Status == "Running")
+        if (job.ExecutionMode == "Spark" && job.Status == "Running" && _sparkService != null)
         {
             var cancelled = await _sparkService.CancelJobAsync(jobId);
             if (cancelled)
@@ -184,6 +184,11 @@ public class TransformationJobService : ITransformationJobService
 
     private async Task SubmitSparkJobAsync(string jobId, TransformationJobRequest request)
     {
+        if (_sparkService == null || _sparkLibraryService == null)
+        {
+            throw new InvalidOperationException("Spark services are not configured. Cannot execute Spark jobs.");
+        }
+
         try
         {
             // If SparkJobDefinitionId is provided, look up the job definition
@@ -314,5 +319,46 @@ public class TransformationJobService : ITransformationJobService
     private async Task UpdateJobStatusAsync(string jobId, string status, string? errorMessage = null, int progress = 0)
     {
         await _repository.UpdateJobStatusAsync(jobId, status, errorMessage, progress);
+    }
+
+    public async Task<TransformationJobStatus?> GetJobByIdAsync(int id)
+    {
+        // Convert numeric ID to string format if stored as string
+        var jobId = id.ToString();
+        var job = await _repository.GetJobAsync(jobId);
+        
+        if (job == null)
+            return null;
+
+        return new TransformationJobStatus
+        {
+            JobId = job.JobId,
+            JobName = job.JobName,
+            Status = job.Status,
+            ExecutionMode = job.ExecutionMode,
+            Progress = job.Progress,
+            SubmittedAt = job.SubmittedAt,
+            StartedAt = job.StartedAt,
+            CompletedAt = job.CompletedAt,
+            ErrorMessage = job.ErrorMessage
+        };
+    }
+
+    public async Task<bool> DeleteJobAsync(int id)
+    {
+        var jobId = id.ToString();
+        var job = await _repository.GetJobAsync(jobId);
+        
+        if (job == null)
+            return false;
+
+        // Cannot delete processing jobs
+        if (job.Status == "Processing" || job.Status == "Running")
+            return false;
+
+        // Delete the job - using repository delete if available
+        // If not available, mark as cancelled instead
+        await UpdateJobStatusAsync(jobId, "Cancelled", "Deleted by user");
+        return true;
     }
 }

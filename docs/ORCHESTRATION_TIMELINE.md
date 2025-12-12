@@ -234,7 +234,7 @@ dotnet test TransformationEngine.Tests  # 10+ tests passing
 **Success Criteria**:
 ```bash
 dotnet build  # 0 errors, 0 warnings
-curl http://localhost:5000/api/transform -d '{"entityType":"users"}'
+curl http://localhost:5003/api/transform -d '{"entityType":"users"}'
 # Response: 200 OK with dbt results
 ```
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using TransformationEngine.Interfaces.Services;
+using TransformationEngine.Service.Services;
 
 namespace TransformationEngine.Controllers;
 
@@ -164,36 +165,98 @@ public class TransformationJobsController : ControllerBase
     }
 
     /// <summary>
-    /// Lists all transformation jobs with optional filtering
+    /// Lists all transformation jobs with optional filtering and pagination
     /// </summary>
     /// <param name="status">Filter by job status</param>
     /// <param name="executionMode">Filter by execution mode</param>
     /// <param name="jobName">Filter by job name (contains)</param>
-    /// <returns>List of jobs matching criteria</returns>
+    /// <param name="page">Page number (1-based)</param>
+    /// <param name="pageSize">Number of jobs per page (10, 15, 25, 50, or 100)</param>
+    /// <returns>Paginated list of jobs matching criteria</returns>
     [HttpGet("list")]
     public async Task<ActionResult<IEnumerable<TransformationJobStatus>>> ListJobs(
         [FromQuery] string? status = null,
         [FromQuery] string? executionMode = null,
-        [FromQuery] string? jobName = null)
+        [FromQuery] string? jobName = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 0)
     {
         try
         {
+            // Validate and normalize page size
+            int validatedPageSize;
+            try
+            {
+                validatedPageSize = PaginationHelper.ValidatePageSize(pageSize);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+
             var filter = new TransformationJobFilter
             {
                 Status = status,
                 ExecutionMode = executionMode,
                 JobNameContains = jobName,
-                MaxResults = 100
+                MaxResults = 500 // Get enough results to paginate through
             };
 
             var jobs = await _jobService.ListJobsAsync(filter);
-            return Ok(jobs);
+            
+            // Apply pagination to results
+            var totalCount = jobs.Count();
+            var skip = PaginationHelper.CalculateSkip(page, validatedPageSize);
+            var paginatedJobs = jobs.Skip(skip).Take(validatedPageSize).ToList();
+
+            var response = new
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = validatedPageSize,
+                TotalPages = PaginationHelper.CalculateTotalPages(totalCount, validatedPageSize),
+                AllowedPageSizes = PaginationHelper.AllowedPageSizes,
+                Jobs = paginatedJobs
+            };
+
+            return Ok(response);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error listing jobs");
             return StatusCode(StatusCodes.Status500InternalServerError,
                 new { error = "Failed to list jobs", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Delete a specific job by ID (removes from queue)
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteJob(int id)
+    {
+        try
+        {
+            var job = await _jobService.GetJobByIdAsync(id);
+            if (job == null)
+                return NotFound(new { error = $"Job {id} not found" });
+
+            // Cannot delete processing jobs
+            if (job.Status == "Processing")
+                return BadRequest(new { error = "Cannot delete a processing job" });
+
+            var success = await _jobService.DeleteJobAsync(id);
+            if (!success)
+                return BadRequest(new { error = "Failed to delete job from queue" });
+
+            _logger.LogInformation("Job {JobId} deleted from queue successfully", id);
+            return Ok(new { message = $"Job {id} deleted from queue successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting job {JobId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { error = "Error deleting job", details = ex.Message });
         }
     }
 }

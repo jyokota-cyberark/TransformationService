@@ -54,6 +54,11 @@ public class TransformationConfiguration
     /// Rule cache configuration
     /// </summary>
     public RuleCacheConfig RuleCache { get; set; } = new();
+
+    /// <summary>
+    /// Schema registry configuration
+    /// </summary>
+    public SchemaRegistryOptions SchemaRegistry { get; set; } = new();
 }
 
 /// <summary>

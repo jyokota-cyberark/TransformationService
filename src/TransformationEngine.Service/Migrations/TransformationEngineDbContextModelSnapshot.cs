@@ -22,6 +22,75 @@ namespace TransformationEngine.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TransformationEngine.Core.Models.AirflowDagDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Configuration")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("DagId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("GeneratedDagPath")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastGeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Schedule")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("SparkJobId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TransformationProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DagId")
+                        .IsUnique();
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("SparkJobId");
+
+                    b.HasIndex("TransformationProjectId");
+
+                    b.ToTable("AirflowDagDefinitions", (string)null);
+                });
+
             modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobDefinition", b =>
                 {
                     b.Property<int>("Id")
@@ -649,6 +718,143 @@ namespace TransformationEngine.Migrations
                     b.ToTable("TransformationJobResults", (string)null);
                 });
 
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationProject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Configuration")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("ExecutionOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("TransformationProjects", (string)null);
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationProjectExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ExecutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ExecutionMetadata")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecordsFailed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecordsProcessed")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExecutionId")
+                        .IsUnique();
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("StartedAt");
+
+                    b.ToTable("TransformationProjectExecutions", (string)null);
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationProjectRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ExecutionOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RuleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("RuleId");
+
+                    b.HasIndex("ProjectId", "RuleId")
+                        .IsUnique();
+
+                    b.ToTable("TransformationProjectRules", (string)null);
+                });
+
             modelBuilder.Entity("TransformationEngine.Core.Models.TransformationRuleToSparkJobMapping", b =>
                 {
                     b.Property<int>("Id")
@@ -701,6 +907,69 @@ namespace TransformationEngine.Migrations
                     b.HasIndex("RuleSetHash");
 
                     b.ToTable("TransformationRuleToSparkJobMappings", (string)null);
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationRuleVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChangeReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChangeType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Configuration")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("RuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RuleType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("RuleId");
+
+                    b.HasIndex("RuleId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("TransformationRuleVersions", (string)null);
                 });
 
             modelBuilder.Entity("TransformationEngine.Models.RawData", b =>
@@ -801,6 +1070,9 @@ namespace TransformationEngine.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("CurrentVersion")
+                        .HasColumnType("integer");
+
                     b.Property<string>("CustomScript")
                         .HasColumnType("text");
 
@@ -816,6 +1088,12 @@ namespace TransformationEngine.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("LastModifiedDate")
                         .HasColumnType("timestamp with time zone");
@@ -901,6 +1179,23 @@ namespace TransformationEngine.Migrations
                     b.ToTable("TransformedEntities", (string)null);
                 });
 
+            modelBuilder.Entity("TransformationEngine.Core.Models.AirflowDagDefinition", b =>
+                {
+                    b.HasOne("TransformationEngine.Core.Models.SparkJobDefinition", "SparkJob")
+                        .WithMany()
+                        .HasForeignKey("SparkJobId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TransformationEngine.Core.Models.TransformationProject", "TransformationProject")
+                        .WithMany()
+                        .HasForeignKey("TransformationProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("SparkJob");
+
+                    b.Navigation("TransformationProject");
+                });
+
             modelBuilder.Entity("TransformationEngine.Core.Models.SparkJobExecution", b =>
                 {
                     b.HasOne("TransformationEngine.Core.Models.SparkJobDefinition", "JobDefinition")
@@ -945,6 +1240,36 @@ namespace TransformationEngine.Migrations
                     b.Navigation("Job");
                 });
 
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationProjectExecution", b =>
+                {
+                    b.HasOne("TransformationEngine.Core.Models.TransformationProject", "Project")
+                        .WithMany("Executions")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationProjectRule", b =>
+                {
+                    b.HasOne("TransformationEngine.Core.Models.TransformationProject", "Project")
+                        .WithMany("ProjectRules")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TransformationEngine.Models.TransformationRule", "Rule")
+                        .WithMany()
+                        .HasForeignKey("RuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Rule");
+                });
+
             modelBuilder.Entity("TransformationEngine.Core.Models.TransformationRuleToSparkJobMapping", b =>
                 {
                     b.HasOne("TransformationEngine.Core.Models.SparkJobDefinition", "JobDefinition")
@@ -954,6 +1279,17 @@ namespace TransformationEngine.Migrations
                         .IsRequired();
 
                     b.Navigation("JobDefinition");
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationRuleVersion", b =>
+                {
+                    b.HasOne("TransformationEngine.Models.TransformationRule", "Rule")
+                        .WithMany()
+                        .HasForeignKey("RuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Rule");
                 });
 
             modelBuilder.Entity("TransformationEngine.Models.TransformationHistory", b =>
@@ -977,6 +1313,13 @@ namespace TransformationEngine.Migrations
             modelBuilder.Entity("TransformationEngine.Core.Models.TransformationJob", b =>
                 {
                     b.Navigation("Result");
+                });
+
+            modelBuilder.Entity("TransformationEngine.Core.Models.TransformationProject", b =>
+                {
+                    b.Navigation("Executions");
+
+                    b.Navigation("ProjectRules");
                 });
 
             modelBuilder.Entity("TransformationEngine.Models.TransformedEntity", b =>

@@ -44,7 +44,7 @@ public class EntityTestJobsController : ControllerBase
     {
         try
         {
-            var userServiceUrl = _configuration["UserServiceApi:BaseUrl"] ?? "http://localhost:5000";
+            var userServiceUrl = _configuration["UserServiceApi:BaseUrl"] ?? "http://localhost:5003";
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.BaseAddress = new Uri(userServiceUrl);
             httpClient.Timeout = TimeSpan.FromSeconds(30);

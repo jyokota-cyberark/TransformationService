@@ -9,6 +9,7 @@ using Hangfire.PostgreSql;
 using TransformationEngine;
 using TransformationEngine.Integration.Extensions;
 using TransformationEngine.Integration.Data;
+using TransformationEngine.Service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,6 +65,11 @@ builder.Services.AddScoped<ISparkJobBuilderService, SparkJobBuilderService>();
 builder.Services.AddScoped<ITransformationRuleConverterService, TransformationRuleConverterService>();
 builder.Services.AddScoped<ISparkJobSchedulerService, SparkJobSchedulerService>();
 
+// Register enhancement services
+builder.Services.AddScoped<ITransformationProjectService, TransformationProjectService>();
+builder.Services.AddScoped<IAirflowDagGeneratorService, AirflowDagGeneratorService>();
+builder.Services.AddScoped<IRuleVersioningService, RuleVersioningService>();
+
 // Register scheduler-specific implementations (Hangfire, Airflow)
 builder.Services.AddScoped<HangfireJobScheduler>();
 builder.Services.AddScoped<AirflowJobScheduler>();
@@ -77,6 +83,10 @@ builder.Services.AddHangfire(configuration => configuration
         options.UseNpgsqlConnection(connectionString)));
 
 builder.Services.AddHangfireServer();
+
+// Register background services for job status monitoring
+builder.Services.AddHostedService<SparkJobStatusPollingService>();
+builder.Services.AddHostedService<KafkaJobStatusConsumerService>();
 
 // Add CORS
 builder.Services.AddCors(options =>

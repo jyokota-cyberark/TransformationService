@@ -284,7 +284,7 @@ Week 13-14: Scaling
 
 ```bash
 # Set in Airflow UI or CLI
-airflow variables set transformation_service_url http://localhost:5000
+airflow variables set transformation_service_url http://localhost:5003
 airflow variables set default_batch_size 1000
 airflow variables set notification_email ops@example.com
 ```

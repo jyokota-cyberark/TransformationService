@@ -1,0 +1,709 @@
+@page
+@model TransformationEngine.Pages.TransformationDashboardModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Transformation Management Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="mb-1">
+            <i class="bi bi-speedometer2"></i> Transformation Management Dashboard
+        </h1>
+        <p class="mb-0">Monitor jobs, manage transformation projects, and track rule versioning</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="jobs-tab" data-bs-toggle="tab" data-bs-target="#jobs" type="button">
+                <i class="bi bi-briefcase"></i> Job Management
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button">
+                <i class="bi bi-diagram-3"></i> Projects & Pipelines
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="rules-tab" data-bs-toggle="tab" data-bs-target="#rules" type="button">
+                <i class="bi bi-clock-history"></i> Rule Versions
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button">
+                <i class="bi bi-graph-up"></i> Analytics
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="dashboardTabContent">
+        <!-- Job Management Tab -->
+        <div class="tab-pane fade show active" id="jobs" role="tabpanel">
+            <div class="transformation-stats">
+                <div class="stat-card success">
+                    <div class="stat-number" id="completedCount">0</div>
+                    <div class="stat-label">Completed Jobs</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-number" id="runningCount">0</div>
+                    <div class="stat-label">Running Jobs</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-number" id="failedCount">0</div>
+                    <div class="stat-label">Failed Jobs</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-number" id="pendingCount">0</div>
+                    <div class="stat-label">Pending Jobs</div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col">
+                    <button class="btn btn-primary" onclick="refreshJobs()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <input type="text" id="jobSearch" class="form-control d-inline-block ms-2" style="width: 200px;" placeholder="Search jobs..." onkeyup="filterJobs()">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-secondary" onclick="toggleSelectAll()" id="selectAllBtn">
+                        <i class="bi bi-check-square"></i> Select All
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteSelectedJobs()" id="deleteSelectedBtn" style="display: none;">
+                        <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <div id="jobsList">
+                <!-- Jobs will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Projects & Pipelines Tab -->
+        <div class="tab-pane fade" id="projects" role="tabpanel">
+            <div class="row mb-3">
+                <div class="col">
+                    <button class="btn btn-primary" onclick="showCreateProjectModal()">
+                        <i class="bi bi-plus-circle"></i> Create Project
+                    </button>
+                </div>
+            </div>
+
+            <div id="projectsList">
+                <!-- Projects will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Rule Versions Tab -->
+        <div class="tab-pane fade" id="rules" role="tabpanel">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <select id="ruleSelect" class="form-select" onchange="loadRuleVersions()">
+                        <option value="">-- Select a Rule --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="ruleVersionsList">
+                <!-- Rule versions will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div class="tab-pane fade" id="analytics" role="tabpanel">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Execution Mode Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="executionModeChart" style="height: 250px;">
+                                <!-- Chart will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Transformation Success Rate</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="successRateChart" style="height: 250px;">
+                                <!-- Chart will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Job Execution Timeline (Last 24 Hours)</h5>
+                </div>
+                <div class="card-body" id="timelineGantt">
+                    <!-- Gantt chart will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Details Modal -->
+<div class="modal fade" id="jobDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Job Details & Execution Timeline</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Job ID:</strong> <span id="modalJobId" class="font-monospace"></span></p>
+                        <p><strong>Job Name:</strong> <span id="modalJobName"></span></p>
+                        <p><strong>Status:</strong> <span id="modalJobStatus"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Execution Mode:</strong> <span id="modalExecutionMode"></span></p>
+                        <p><strong>Progress:</strong> <span id="modalProgress"></span>%</p>
+                        <div class="progress">
+                            <div id="modalProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="mt-4 mb-3">Execution Timeline</h6>
+                <div id="jobTimeline" class="job-timeline">
+                    <!-- Timeline steps will be loaded here -->
+                </div>
+
+                <div class="execution-detail mt-3">
+                    <strong>Details:</strong>
+                    <pre id="modalJobDetails"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="cancelJobBtn" onclick="cancelCurrentJob()">Cancel Job</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="/css/transformation-dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+    let allJobs = [];
+    let allRules = [];
+    let currentJobId = null;
+    let refreshInterval = null;
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadJobs();
+        await loadProjects();
+        await loadRulesForDropdown();
+        refreshInterval = setInterval(loadJobs, 5000); // Auto-refresh every 5 seconds
+    });
+
+    // Load all jobs
+    async function loadJobs() {
+        try {
+            const response = await fetch('/api/transformation-jobs/list');
+            if (!response.ok) throw new Error('Failed to load jobs');
+            
+            allJobs = await response.json();
+            renderJobs();
+            updateJobStats();
+        } catch (error) {
+            console.error('Error loading jobs:', error);
+            document.getElementById('jobsList').innerHTML = '<div class="alert alert-danger">Error loading jobs: ' + error.message + '</div>';
+        }
+    }
+
+    // Render jobs list
+    function renderJobs() {
+        const container = document.getElementById('jobsList');
+        
+        if (!allJobs || allJobs.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No transformation jobs yet</div>';
+            return;
+        }
+
+        let html = '';
+        allJobs.forEach((job, index) => {
+            const statusClass = getStatusClass(job.status);
+            const progressPercent = getProgressPercent(job.status);
+            const isDeletable = job.status !== 'Processing' && job.status !== 'Running'; // Can't delete processing/running jobs
+            
+            html += `
+                <div class="card job-card">
+                    <div class="card-body">
+                        <div class="row align-items-start">
+                            <div class="col-md-1">
+                                <input type="checkbox" class="form-check-input job-checkbox" 
+                                       data-job-id="${job.jobId}" 
+                                       ${!isDeletable ? 'disabled' : ''}
+                                       onchange="updateSelectedCount()">
+                            </div>
+                            <div class="col-md-7">
+                                <h6 class="mb-2">${job.jobName}</h6>
+                                <p class="mb-1">
+                                    <small class="text-muted">ID: <code>${job.jobId}</code></small>
+                                </p>
+                                <div class="mb-2">
+                                    <span class="job-status-badge ${statusClass}">${job.status}</span>
+                                    <span class="badge bg-secondary ms-2">${job.executionMode}</span>
+                                </div>
+                                <small class="text-muted">
+                                    Submitted: ${new Date(job.submittedAt).toLocaleString()}
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-2">
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar ${job.status === 'Running' ? 'progress-bar-animated-step' : ''}" 
+                                             role="progressbar" 
+                                             style="width: ${progressPercent}%"
+                                             aria-valuenow="${progressPercent}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            ${progressPercent}%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary" onclick="showJobDetails('${job.jobId}')">
+                                        <i class="bi bi-eye"></i> Details
+                                    </button>
+                                    ${isDeletable ? `
+                                    <button class="btn btn-outline-danger" onclick="deleteJob('${job.jobId}', '${job.jobName}')">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                    ` : `
+                                    <button class="btn btn-outline-warning" disabled title="Cannot delete running jobs">
+                                        <i class="bi bi-lock"></i> Locked
+                                    </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // Update job statistics
+    function updateJobStats() {
+        const stats = {
+            completed: allJobs.filter(j => j.status === 'Completed').length,
+            running: allJobs.filter(j => j.status === 'Running').length,
+            failed: allJobs.filter(j => j.status === 'Failed').length,
+            pending: allJobs.filter(j => j.status === 'Pending').length
+        };
+
+        document.getElementById('completedCount').textContent = stats.completed;
+        document.getElementById('runningCount').textContent = stats.running;
+        document.getElementById('failedCount').textContent = stats.failed;
+        document.getElementById('pendingCount').textContent = stats.pending;
+    }
+
+    // Show job details modal with timeline
+    async function showJobDetails(jobId) {
+        currentJobId = jobId;
+        try {
+            const statusResponse = await fetch(`/api/transformation-jobs/${jobId}/status`);
+            if (!statusResponse.ok) throw new Error('Failed to load job status');
+            
+            const status = await statusResponse.json();
+            
+            document.getElementById('modalJobId').textContent = jobId;
+            document.getElementById('modalJobName').textContent = status.jobName;
+            document.getElementById('modalJobStatus').innerHTML = `<span class="job-status-badge ${getStatusClass(status.status)}">${status.status}</span>`;
+            document.getElementById('modalExecutionMode').textContent = status.executionMode;
+            
+            const progress = getProgressPercent(status.status);
+            document.getElementById('modalProgress').textContent = progress;
+            document.getElementById('modalProgressBar').style.width = progress + '%';
+
+            // Render execution timeline
+            renderExecutionTimeline(status);
+            
+            document.getElementById('modalJobDetails').textContent = JSON.stringify(status, null, 2);
+            
+            const modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Error loading job details:', error);
+            alert('Error loading job details: ' + error.message);
+        }
+    }
+
+    // Render execution timeline
+    function renderExecutionTimeline(status) {
+        const timeline = document.getElementById('jobTimeline');
+        const steps = [
+            { stage: 'Submitted', completed: true },
+            { stage: 'Validating', completed: status.status !== 'Pending' },
+            { stage: 'Processing', completed: status.status === 'Completed' || status.status === 'Failed' },
+            { stage: 'Completed', completed: status.status === 'Completed' }
+        ];
+
+        let html = '';
+        steps.forEach((step, idx) => {
+            let indicatorClass = 'step-indicator';
+            let icon = '';
+            
+            if (step.completed) {
+                indicatorClass += ' completed';
+                icon = '✓';
+            } else if (status.status === 'Running' && idx === 2) {
+                indicatorClass += ' active progress-bar-animated-step';
+                icon = '●';
+            } else {
+                icon = idx + 1;
+            }
+
+            html += `
+                <div class="job-step">
+                    <div class="${indicatorClass}">${icon}</div>
+                    <div class="step-content">
+                        <div class="step-title">${step.stage}</div>
+                        <div class="step-time">${step.completed ? 'Completed' : status.status === 'Running' && idx === 2 ? 'In Progress' : 'Pending'}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        timeline.innerHTML = html;
+    }
+
+    // Refresh jobs
+    function refreshJobs() {
+        loadJobs();
+    }
+
+    // Filter jobs
+    function filterJobs() {
+        const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
+        const filtered = allJobs.filter(job => 
+            job.jobName.toLowerCase().includes(searchTerm) ||
+            job.jobId.toLowerCase().includes(searchTerm)
+        );
+        
+        allJobs = filtered;
+        renderJobs();
+    }
+
+    // Cancel job
+    async function cancelCurrentJob() {
+        if (!currentJobId) return;
+        
+        try {
+            const response = await fetch(`/api/transformation-jobs/${currentJobId}/cancel`, { method: 'POST' });
+            if (response.ok) {
+                alert('Job cancelled successfully');
+                bootstrap.Modal.getInstance(document.getElementById('jobDetailsModal')).hide();
+                await loadJobs();
+            } else {
+                alert('Failed to cancel job');
+            }
+        } catch (error) {
+            console.error('Error cancelling job:', error);
+            alert('Error cancelling job: ' + error.message);
+        }
+    }
+
+    // Load projects
+    async function loadProjects() {
+        try {
+            const response = await fetch('/api/transformation-projects');
+            if (!response.ok) throw new Error('Failed to load projects');
+            
+            const projects = await response.json();
+            renderProjects(projects);
+        } catch (error) {
+            console.error('Error loading projects:', error);
+            document.getElementById('projectsList').innerHTML = '<div class="alert alert-danger">Error loading projects: ' + error.message + '</div>';
+        }
+    }
+
+    // Render projects
+    function renderProjects(projects) {
+        const container = document.getElementById('projectsList');
+        
+        if (!projects || projects.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No transformation projects yet</div>';
+            return;
+        }
+
+        let html = '';
+        projects.forEach(project => {
+            html += `
+                <div class="project-pipeline">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="mb-2">${project.name}</h6>
+                            <p class="small text-muted mb-2">${project.description || 'No description'}</p>
+                            <div class="mb-2">
+                                Rules:
+                                ${project.projectRules && project.projectRules.map(pr => 
+                                    `<span class="rule-tag">${pr.ruleName}</span>`
+                                ).join('') || 'No rules'}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editProject(${project.id})">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteProject(${project.id})">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // Load rules for dropdown
+    async function loadRulesForDropdown() {
+        try {
+            const response = await fetch('/api/transformation-rules');
+            if (!response.ok) throw new Error('Failed to load rules');
+            
+            allRules = await response.json();
+            
+            const select = document.getElementById('ruleSelect');
+            allRules.forEach(rule => {
+                const option = document.createElement('option');
+                option.value = rule.id;
+                option.textContent = rule.ruleName;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading rules:', error);
+        }
+    }
+
+    // Load rule versions
+    async function loadRuleVersions() {
+        const ruleId = document.getElementById('ruleSelect').value;
+        if (!ruleId) {
+            document.getElementById('ruleVersionsList').innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/rule-versions/${ruleId}`);
+            if (!response.ok) throw new Error('Failed to load rule versions');
+            
+            const versions = await response.json();
+            renderRuleVersions(versions);
+        } catch (error) {
+            console.error('Error loading rule versions:', error);
+            document.getElementById('ruleVersionsList').innerHTML = '<div class="alert alert-danger">Error loading versions: ' + error.message + '</div>';
+        }
+    }
+
+    // Render rule versions
+    function renderRuleVersions(versions) {
+        const container = document.getElementById('ruleVersionsList');
+        
+        if (!versions || versions.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No versions for this rule</div>';
+            return;
+        }
+
+        let html = '';
+        versions.forEach((version, idx) => {
+            html += `
+                <div class="rule-version-history">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-2">
+                                <span class="version-badge">v${version.version}</span>
+                                <small class="text-muted ms-2">${new Date(version.createdAt).toLocaleString()}</small>
+                            </div>
+                            <p class="small mb-2"><strong>Type:</strong> ${version.ruleType}</p>
+                            <p class="small mb-0"><strong>Pattern:</strong> ${version.sourcePattern || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-sm btn-outline-info" onclick="compareVersions(${version.ruleId}, ${version.version})">
+                                <i class="bi bi-shuffle"></i> Compare
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="restoreVersion(${version.ruleId}, ${version.version})">
+                                <i class="bi bi-arrow-counterclockwise"></i> Restore
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // Helper functions
+    function getStatusClass(status) {
+        switch(status) {
+            case 'Completed': return 'completed';
+            case 'Running': return 'running';
+            case 'Failed': return 'failed';
+            default: return 'pending';
+        }
+    }
+
+    function getProgressPercent(status) {
+        switch(status) {
+            case 'Pending': return 25;
+            case 'Running': return 65;
+            case 'Completed': return 100;
+            case 'Failed': return 100;
+            default: return 0;
+        }
+    }
+
+    // Delete Job Functions
+    async function deleteJob(jobId, jobName) {
+        if (!confirm(`Delete job "${jobName}" (${jobId})? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/transformation-jobs/${jobId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert('Job deleted successfully');
+                await loadJobs(); // Reload job list
+            } else {
+                const error = await response.json();
+                alert(`Failed to delete job: ${error.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error deleting job:', error);
+            alert(`Error deleting job: ${error.message}`);
+        }
+    }
+
+    // Toggle select all jobs
+    function toggleSelectAll() {
+        const checkboxes = document.querySelectorAll('.job-checkbox:not(:disabled)');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(cb => {
+            cb.checked = !allChecked;
+        });
+        
+        updateSelectedCount();
+    }
+
+    // Update selected count and show/hide delete button
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.job-checkbox:checked');
+        const count = checkboxes.length;
+        
+        document.getElementById('selectedCount').textContent = count;
+        const deleteBtn = document.getElementById('deleteSelectedBtn');
+        
+        if (count > 0) {
+            deleteBtn.style.display = 'inline-block';
+        } else {
+            deleteBtn.style.display = 'none';
+        }
+    }
+
+    // Delete selected jobs (bulk delete)
+    async function deleteSelectedJobs() {
+        const checkboxes = document.querySelectorAll('.job-checkbox:checked');
+        const selectedJobs = Array.from(checkboxes).map(cb => ({
+            id: cb.dataset.jobId,
+            name: cb.closest('.job-card').querySelector('h6').textContent
+        }));
+
+        if (selectedJobs.length === 0) {
+            alert('No jobs selected');
+            return;
+        }
+
+        const jobList = selectedJobs.map(j => `"${j.name}"`).join(', ');
+        if (!confirm(`Delete ${selectedJobs.length} job(s)?\n\n${jobList}\n\nThis action cannot be undone.`)) {
+            return;
+        }
+
+        let successCount = 0;
+        let failureCount = 0;
+
+        for (const job of selectedJobs) {
+            try {
+                const response = await fetch(`/api/transformation-jobs/${job.id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    successCount++;
+                } else {
+                    failureCount++;
+                }
+            } catch (error) {
+                console.error(`Error deleting job ${job.id}:`, error);
+                failureCount++;
+            }
+        }
+
+        alert(`Bulk delete complete:\n✓ ${successCount} job(s) deleted\n✗ ${failureCount} job(s) failed`);
+        
+        // Reload jobs and reset selection
+        await loadJobs();
+        document.querySelectorAll('.job-checkbox').forEach(cb => cb.checked = false);
+        updateSelectedCount();
+    }
+
+    // Placeholder functions for project and rule management
+    function showCreateProjectModal() {
+        alert('Create Project feature coming soon');
+    }
+
+    function editProject(projectId) {
+        alert('Edit Project feature coming soon');
+    }
+
+    function deleteProject(projectId) {
+        if (confirm('Delete this project?')) {
+            alert('Delete Project feature coming soon');
+        }
+    }
+
+    function compareVersions(ruleId, version) {
+        alert('Version comparison feature coming soon');
+    }
+
+    function restoreVersion(ruleId, version) {
+        if (confirm(`Restore rule to version ${version}?`)) {
+            alert('Restore feature coming soon');
+        }
+    }
+
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+        if (refreshInterval) clearInterval(refreshInterval);
+    });
+</script>
+}
+

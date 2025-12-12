@@ -2,6 +2,16 @@
 
 > **Unified data transformation engine with multiple integration patterns and execution backends**
 
+## 🆕 Recent Enhancements
+
+Three major enhancements have been added to improve ETL operations and rule management:
+
+1. **DAG Auto-Generation API** - Automatically generate Airflow DAGs from transformation rules
+2. **Transformation Projects** - Group related rules into projects/pipelines
+3. **Rule Versioning** - Track rule changes with full version history and rollback
+
+See [ENHANCEMENTS_SUMMARY.md](ENHANCEMENTS_SUMMARY.md) for complete details.
+
 ## Overview
 
 The Transformation Service provides a flexible, scalable platform for data transformation with support for multiple execution modes (in-memory, Spark, Kafka) and integration patterns (REST API, embedded DLL, event streams).

@@ -1,0 +1,516 @@
+<mxfile host="app.diagrams.net" modified="2025-12-01T08:00:00.000Z" agent="5.0" version="22.1.11" etag="draw.io" type="device">
+  <diagram name="Transformation System Architecture" id="transformation-architecture">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Transformation System Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="527" y="20" width="600" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Microservices-based Data Transformation Platform" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="527" y="60" width="600" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Kafka Infrastructure Container -->
+        <mxCell id="kafka-container" value="Kafka Infrastructure" style="swimlane;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;strokeWidth=2;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="600" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- Zookeeper -->
+        <mxCell id="zookeeper" value="Zookeeper&#xa;Port: 2181" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="kafka-container">
+          <mxGeometry x="20" y="40" width="150" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Kafka Broker -->
+        <mxCell id="kafka-broker" value="Kafka Broker&#xa;Port: 9092" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="kafka-container">
+          <mxGeometry x="210" y="40" width="180" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Schema Registry -->
+        <mxCell id="schema-registry" value="Schema Registry&#xa;Port: 8085" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="kafka-container">
+          <mxGeometry x="420" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Kafka Topics -->
+        <mxCell id="topic-user-changes" value="user-changes" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="kafka-container">
+          <mxGeometry x="40" y="160" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="topic-inventory" value="inventory-user-items" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="kafka-container">
+          <mxGeometry x="220" y="160" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="topic-job-status" value="transformation-job-status" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="kafka-container">
+          <mxGeometry x="400" y="160" width="180" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- PostgreSQL Container -->
+        <mxCell id="postgres-container" value="PostgreSQL Databases" style="swimlane;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="680" y="120" width="400" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- Database: inventorypoc_users -->
+        <mxCell id="db-users" value="inventorypoc_users&#xa;Port: 5432" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="postgres-container">
+          <mxGeometry x="30" y="50" width="140" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Database: transformationengine -->
+        <mxCell id="db-transform" value="transformationengine&#xa;Port: 5432" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="postgres-container">
+          <mxGeometry x="210" y="50" width="160" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Database: inventorypoc_inventory -->
+        <mxCell id="db-inventory" value="inventorypoc_inventory&#xa;Port: 5432" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="postgres-container">
+          <mxGeometry x="90" y="160" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- User Management Service Container -->
+        <mxCell id="user-mgmt-container" value="User Management Service&#xa;Port: 5010" style="swimlane;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=3;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="440" width="380" height="480" as="geometry" />
+        </mxCell>
+        
+        <!-- API Controllers -->
+        <mxCell id="user-api-layer" value="API Controllers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontStyle=1" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="15" y="40" width="350" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-api-1" value="UsersApiController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#82B366;fontSize=10;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="20" y="60" width="80" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-api-2" value="TransformationConfigController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#82B366;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="105" y="60" width="80" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-api-3" value="TransformationJobsController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#82B366;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="190" y="60" width="80" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-api-4" value="SyncApiController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#82B366;fontSize=10;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="275" y="60" width="80" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Service Layer -->
+        <mxCell id="user-service-layer" value="Services" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontStyle=1" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="15" y="150" width="350" height="110" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-svc-1" value="UserService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="25" y="175" width="70" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-svc-2" value="UserSyncService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="100" y="175" width="70" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-svc-3" value="ConfigService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="175" y="175" width="70" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-svc-4" value="SyncHistoryService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="250" y="175" width="70" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-svc-5" value="KafkaEnrichmentService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="100" y="215" width="120" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Integration Layer -->
+        <mxCell id="user-integration-layer" value="Transformation Integration" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#82B366;fontStyle=1" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="15" y="280" width="350" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-int-1" value="IIntegratedTransformationService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#82B366;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="25" y="305" width="100" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-int-2" value="TransformationModeRouter" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#82B366;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="135" y="305" width="100" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-int-3" value="JobQueueManagementService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#82B366;fontSize=8;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="245" y="305" width="100" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- UI Layer -->
+        <mxCell id="user-ui-layer" value="Razor Pages UI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontStyle=1" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="15" y="400" width="350" height="70" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-ui-1" value="Users.cshtml" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=10;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="25" y="425" width="100" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-ui-2" value="TransformationRules.cshtml" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="135" y="425" width="100" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="user-ui-3" value="TransformationJobs.cshtml" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="user-mgmt-container">
+          <mxGeometry x="245" y="425" width="100" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Transformation Service Container -->
+        <mxCell id="transform-container" value="Transformation Service&#xa;Port: 5020" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;strokeWidth=3;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="460" y="440" width="420" height="480" as="geometry" />
+        </mxCell>
+        
+        <!-- API Controllers -->
+        <mxCell id="transform-api-layer" value="API Controllers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D79B00;fontStyle=1" vertex="1" parent="transform-container">
+          <mxGeometry x="15" y="40" width="390" height="85" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-api-1" value="TransformationRulesController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="20" y="60" width="75" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-api-2" value="TransformationJobsController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="100" y="60" width="75" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-api-3" value="TransformationProjectsController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=8;" vertex="1" parent="transform-container">
+          <mxGeometry x="180" y="60" width="75" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-api-4" value="SparkJobsController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="260" y="60" width="70" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-api-5" value="RuleVersionsController" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="335" y="60" width="65" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Core Services -->
+        <mxCell id="transform-service-layer" value="Core Services" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;fontStyle=1" vertex="1" parent="transform-container">
+          <mxGeometry x="15" y="145" width="390" height="85" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-svc-1" value="TransformationJobService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="20" y="165" width="90" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-svc-2" value="TransformationProjectService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=8;" vertex="1" parent="transform-container">
+          <mxGeometry x="115" y="165" width="90" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-svc-3" value="RuleVersioningService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="210" y="165" width="90" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="transform-svc-4" value="SparkJobBuilderService" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="305" y="165" width="90" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Transformation Engines -->
+        <mxCell id="transform-engines" value="Transformation Engines" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#82B366;fontStyle=1" vertex="1" parent="transform-container">
+          <mxGeometry x="15" y="250" width="390" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="engine-sidecar" value="Sidecar Engine&#xa;(In-Process)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#82B366;fontSize=10;" vertex="1" parent="transform-container">
+          <mxGeometry x="25" y="275" width="115" height="35" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="engine-spark" value="Spark Engine&#xa;(Distributed)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#82B366;fontSize=10;" vertex="1" parent="transform-container">
+          <mxGeometry x="155" y="275" width="115" height="35" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="engine-external" value="External API&#xa;(Fallback)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#82B366;fontSize=10;" vertex="1" parent="transform-container">
+          <mxGeometry x="285" y="275" width="110" height="35" as="geometry" />
+        </mxCell>
+        
+        <!-- Background Services -->
+        <mxCell id="transform-bg-services" value="Background Services" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1" vertex="1" parent="transform-container">
+          <mxGeometry x="15" y="370" width="390" height="70" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="bg-svc-1" value="TransformationQueueProcessor" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8F5;strokeColor=#9673A6;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="25" y="395" width="115" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="bg-svc-2" value="KafkaJobStatusConsumer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8F5;strokeColor=#9673A6;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="155" y="395" width="115" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="bg-svc-3" value="SparkJobStatusPoller" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8F5;strokeColor=#9673A6;fontSize=9;" vertex="1" parent="transform-container">
+          <mxGeometry x="285" y="395" width="110" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Inventory Service Container -->
+        <mxCell id="inventory-container" value="Inventory Service&#xa;Port: 5002" style="swimlane;whiteSpace=wrap;html=1;fillColor=#D5E8F5;strokeColor=#6C8EBF;strokeWidth=3;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="920" y="440" width="280" height="300" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="inventory-api" value="API Controllers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;" vertex="1" parent="inventory-container">
+          <mxGeometry x="15" y="40" width="250" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="inventory-services" value="Services" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="inventory-container">
+          <mxGeometry x="15" y="120" width="250" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="inventory-kafka" value="Kafka Consumer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="inventory-container">
+          <mxGeometry x="15" y="200" width="250" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="inventory-note" value="Consumes transformed&#xa;user data" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=2" vertex="1" parent="inventory-container">
+          <mxGeometry x="65" y="265" width="150" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Spark Cluster Container -->
+        <mxCell id="spark-container" value="Apache Spark Cluster" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#D79B00;strokeWidth=2;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="960" width="330" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="spark-master" value="Spark Master&#xa;Port: 7077, 8080" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFEB3B;strokeColor=#D79B00;" vertex="1" parent="spark-container">
+          <mxGeometry x="20" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="spark-worker" value="Spark Worker&#xa;Port: 8081" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#D79B00;" vertex="1" parent="spark-container">
+          <mxGeometry x="170" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="spark-jobs" value="ETL Jobs&#xa;Transformation Jobs" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=11;" vertex="1" parent="spark-container">
+          <mxGeometry x="90" y="115" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Airflow Container -->
+        <mxCell id="airflow-container" value="Apache Airflow" style="swimlane;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;strokeWidth=2;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="410" y="960" width="280" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="airflow-webserver" value="Airflow Webserver&#xa;Port: 8082" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#80CBC4;strokeColor=#00897B;" vertex="1" parent="airflow-container">
+          <mxGeometry x="20" y="40" width="240" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="airflow-scheduler" value="Airflow Scheduler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#80CBC4;strokeColor=#00897B;" vertex="1" parent="airflow-container">
+          <mxGeometry x="20" y="90" width="240" height="35" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="airflow-dags" value="DAG Definitions&#xa;(Orchestrates scheduled jobs)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontSize=10;" vertex="1" parent="airflow-container">
+          <mxGeometry x="20" y="135" width="240" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Hangfire Container -->
+        <mxCell id="hangfire-container" value="Hangfire" style="swimlane;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;strokeWidth=2;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="730" y="960" width="240" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="hangfire-dashboard" value="Hangfire Dashboard" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#388E3C;" vertex="1" parent="hangfire-container">
+          <mxGeometry x="20" y="40" width="200" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="hangfire-queue" value="Job Queue" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#388E3C;" vertex="1" parent="hangfire-container">
+          <mxGeometry x="20" y="90" width="200" height="35" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="hangfire-recurring" value="Recurring Jobs&#xa;(Background processing)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;" vertex="1" parent="hangfire-container">
+          <mxGeometry x="20" y="135" width="200" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Legend Container -->
+        <mxCell id="legend-container" value="Legend" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;strokeWidth=1;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1010" y="800" width="200" height="340" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-title-components" value="Components:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="35" width="180" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-user" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="60" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-user-text" value="User Management" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="60" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-transform" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="85" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-transform-text" value="Transformation Service" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="85" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-inventory" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8F5;strokeColor=#6C8EBF;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="110" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-inventory-text" value="Inventory Service" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="110" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-kafka" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="135" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-kafka-text" value="Kafka Infrastructure" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="135" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-title-arrows" value="Data Flows:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="165" width="180" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-arrow-user" value="" style="endArrow=classic;html=1;strokeColor=#0000FF;strokeWidth=3;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="10" y="200" as="sourcePoint" />
+            <mxPoint x="40" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-arrow-user-text" value="User Creation" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="190" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-arrow-transform" value="" style="endArrow=classic;html=1;strokeColor=#00FF00;strokeWidth=3;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="10" y="225" as="sourcePoint" />
+            <mxPoint x="40" y="225" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-arrow-transform-text" value="Transformation" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="215" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-arrow-spark" value="" style="endArrow=classic;html=1;strokeColor=#FF8C00;strokeWidth=2;dashed=1;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="10" y="250" as="sourcePoint" />
+            <mxPoint x="40" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-arrow-spark-text" value="Spark Jobs" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="240" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-arrow-kafka" value="" style="endArrow=classic;html=1;strokeColor=#9673A6;strokeWidth=2;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="10" y="275" as="sourcePoint" />
+            <mxPoint x="40" y="275" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-arrow-kafka-text" value="Kafka Events" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="265" width="145" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-arrow-orchestration" value="" style="endArrow=classic;html=1;strokeColor=#00897B;strokeWidth=2;dashed=1;dashPattern=1 4;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="10" y="300" as="sourcePoint" />
+            <mxPoint x="40" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-arrow-orchestration-text" value="Orchestration" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="45" y="290" width="145" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: User Management to PostgreSQL -->
+        <mxCell id="arrow-1" value="1. Save User" style="endArrow=classic;html=1;strokeColor=#0000FF;strokeWidth=3;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="user-mgmt-container" target="db-users">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="430" y="550" as="sourcePoint" />
+            <mxPoint x="480" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: User Management to Kafka -->
+        <mxCell id="arrow-2" value="4. Publish Event" style="endArrow=classic;html=1;strokeColor=#0000FF;strokeWidth=3;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="user-mgmt-container" target="topic-user-changes">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="420" as="sourcePoint" />
+            <mxPoint x="280" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: Transformation Queue Processing -->
+        <mxCell id="arrow-3" value="5. Poll Jobs" style="endArrow=classic;html=1;strokeColor=#00FF00;strokeWidth=3;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="bg-svc-1" target="db-transform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="580" y="820" as="sourcePoint" />
+            <mxPoint x="630" y="770" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="537" y="420" />
+              <mxPoint x="970" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: Kafka to Inventory Service -->
+        <mxCell id="arrow-4" value="Consume Events" style="endArrow=classic;html=1;strokeColor=#9673A6;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="topic-inventory" target="inventory-kafka">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="630" y="300" as="sourcePoint" />
+            <mxPoint x="680" y="250" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="640" y="310" />
+              <mxPoint x="640" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: Transformation Service to Spark -->
+        <mxCell id="arrow-5" value="Submit Job" style="endArrow=classic;html=1;strokeColor=#FF8C00;strokeWidth=2;dashed=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="transform-container" target="spark-master">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="380" y="940" as="sourcePoint" />
+            <mxPoint x="430" y="890" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="565" y="940" />
+              <mxPoint x="150" y="940" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: Airflow to Transformation Service -->
+        <mxCell id="arrow-6" value="Trigger Scheduled Jobs" style="endArrow=classic;html=1;strokeColor=#00897B;strokeWidth=2;dashed=1;dashPattern=1 4;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="airflow-container" target="transform-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="550" y="940" as="sourcePoint" />
+            <mxPoint x="600" y="890" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: Hangfire to Transformation Service -->
+        <mxCell id="arrow-7" value="Background Jobs" style="endArrow=classic;html=1;strokeColor=#388E3C;strokeWidth=2;dashed=1;dashPattern=1 4;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="hangfire-container" target="transform-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="730" y="1000" as="sourcePoint" />
+            <mxPoint x="780" y="950" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="900" y="1005" />
+              <mxPoint x="900" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Annotation: User Management -->
+        <mxCell id="annotation-1" value="Entry point for user operations&#xa;Integrates transformation via sidecar" style="text;html=1;strokeColor=none;fillColor=#FFFFCC;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="40" y="930" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="annotation-1-arrow" value="" style="endArrow=classic;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="annotation-1" target="user-mgmt-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="140" y="920" as="sourcePoint" />
+            <mxPoint x="190" y="870" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Annotation: Transformation Service -->
+        <mxCell id="annotation-2" value="Central transformation orchestration&#xa;Manages rules, jobs, and execution" style="text;html=1;strokeColor=none;fillColor=#FFFFCC;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="460" y="930" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="annotation-2-arrow" value="" style="endArrow=classic;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="annotation-2" target="transform-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="570" y="920" as="sourcePoint" />
+            <mxPoint x="620" y="870" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Annotation: Kafka -->
+        <mxCell id="annotation-3" value="Event streaming backbone&#xa;Decouples services" style="text;html=1;strokeColor=none;fillColor=#FFFFCC;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="260" y="410" width="160" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="annotation-3-arrow" value="" style="endArrow=classic;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="annotation-3" target="kafka-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="340" y="400" as="sourcePoint" />
+            <mxPoint x="390" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Version Info -->
+        <mxCell id="version-info" value="Version: 1.0&#xa;Date: December 2025&#xa;Transformation Team" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="1010" y="1150" width="150" height="50" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+

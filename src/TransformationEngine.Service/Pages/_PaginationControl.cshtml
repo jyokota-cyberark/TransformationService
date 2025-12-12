@@ -1,0 +1,172 @@
+@* Pagination Control with Page Size Selector *@
+@{
+    // Expected properties from caller:
+    // - Model.TotalPages (int)
+    // - Model.CurrentPage (int) 
+    // - Model.PageSize (int)
+    // - Model.AllowedPageSizes (int[]) - optional, defaults to [10, 15, 25, 50, 100]
+    // - PaginationId (string) - optional, for targeting specific pagination control
+}
+
+@{
+    var paginationId = ViewBag.PaginationId ?? "pagination-control";
+    var allowedPageSizes = ViewBag.AllowedPageSizes ?? new[] { 10, 15, 25, 50, 100 };
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var pageSize = ViewBag.PageSize ?? 15;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var totalCount = ViewBag.TotalCount ?? 0;
+}
+
+<nav aria-label="Pagination Navigation" class="d-flex justify-content-between align-items-center">
+    <!-- Page Size Selector -->
+    <div class="page-size-selector">
+        <label for="@(paginationId)-pageSize" class="me-2">Rows per page:</label>
+        <select id="@(paginationId)-pageSize" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+            @foreach (var size in allowedPageSizes)
+            {
+                if (size == pageSize)
+                {
+                    <option value="@size" selected>@size</option>
+                }
+                else
+                {
+                    <option value="@size">@size</option>
+                }
+            }
+        </select>
+    </div>
+
+    <!-- Page Info -->
+    <div class="page-info text-muted">
+        <small>
+            Showing @((currentPage - 1) * pageSize + 1)-@Math.Min(currentPage * pageSize, totalCount) of @totalCount
+        </small>
+    </div>
+
+    <!-- Pagination Links -->
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+            <a class="page-link" href="#" data-page="1" aria-label="First">
+                <i class="bi bi-chevron-bar-left"></i>
+            </a>
+        </li>
+        <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+            <a class="page-link" href="#" data-page="@(currentPage - 1)" aria-label="Previous">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+
+        @* Page number links *@
+        @{
+            int startPage = Math.Max(1, currentPage - 2);
+            int endPage = Math.Min(totalPages, currentPage + 2);
+            
+            if (startPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="1">1</a>
+                </li>
+                if (startPage > 2)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+            }
+
+            for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="#" data-page="@i">@i</a>
+                </li>
+            }
+
+            if (endPage < totalPages)
+            {
+                if (endPage < totalPages - 1)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="@totalPages">@totalPages</a>
+                </li>
+            }
+        }
+
+        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+            <a class="page-link" href="#" data-page="@(currentPage + 1)" aria-label="Next">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+            <a class="page-link" href="#" data-page="@totalPages" aria-label="Last">
+                <i class="bi bi-chevron-bar-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<style>
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .page-size-selector select {
+        min-width: 60px;
+    }
+
+    .page-info {
+        flex: 1;
+        text-align: center;
+    }
+
+    nav.d-flex {
+        gap: 16px;
+    }
+</style>
+
+<script>
+    // Pagination control handler
+    (function() {
+        const paginationId = '@paginationId';
+        const pageSizeSelect = document.getElementById(paginationId + '-pageSize');
+        const pageLinks = document.querySelectorAll('[data-page]');
+
+        // Handle page size change
+        if (pageSizeSelect) {
+            pageSizeSelect.addEventListener('change', function() {
+                const newPageSize = this.value;
+                // Store in localStorage for persistence
+                localStorage.setItem(paginationId + '-pageSize', newPageSize);
+                // Reload with new page size (page 1)
+                const url = new URL(window.location);
+                url.searchParams.set('pageSize', newPageSize);
+                url.searchParams.set('page', '1');
+                window.location = url.toString();
+            });
+
+            // Restore from localStorage if available
+            const savedPageSize = localStorage.getItem(paginationId + '-pageSize');
+            if (savedPageSize && savedPageSize !== pageSizeSelect.value) {
+                pageSizeSelect.value = savedPageSize;
+            }
+        }
+
+        // Handle page link clicks
+        pageLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (this.parentElement.classList.contains('disabled')) return;
+                
+                const page = this.getAttribute('data-page');
+                const url = new URL(window.location);
+                url.searchParams.set('page', page);
+                window.location = url.toString();
+            });
+        });
+    })();
+</script>

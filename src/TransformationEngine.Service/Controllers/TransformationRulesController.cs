@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TransformationEngine.Data;
 using TransformationEngine.Models;
+using TransformationEngine.Core.Models.DTOs;
+using TransformationEngine.Service.Services;
 
 namespace TransformationEngine.Controllers;
 
@@ -25,31 +27,89 @@ public class TransformationRulesController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all transformation rules, optionally filtered by inventory type
+    /// Gets all transformation rules with pagination, optionally filtered by inventory type
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<TransformationRule>>> GetRules([FromQuery] int? inventoryTypeId = null)
+    public async Task<ActionResult> GetRules(
+        [FromQuery] int? inventoryTypeId = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 0)
     {
-        var query = _context.TransformationRules.AsQueryable();
-
-        if (inventoryTypeId.HasValue)
+        try
         {
-            query = query.Where(r => r.InventoryTypeId == inventoryTypeId.Value);
+            // Validate and normalize page size
+            int validatedPageSize;
+            try
+            {
+                validatedPageSize = PaginationHelper.ValidatePageSize(pageSize);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+
+            var query = _context.TransformationRules.AsQueryable();
+
+            if (inventoryTypeId.HasValue)
+            {
+                query = query.Where(r => r.InventoryTypeId == inventoryTypeId.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+            var skip = PaginationHelper.CalculateSkip(page, validatedPageSize);
+
+            var rules = await query
+                .OrderBy(r => r.Priority)
+                .ThenBy(r => r.RuleName)
+                .Skip(skip)
+                .Take(validatedPageSize)
+                .ToListAsync();
+
+            var dtos = rules.Select(r => new TransformationRuleDto
+            {
+                Id = r.Id,
+                InventoryTypeId = r.InventoryTypeId,
+                FieldName = r.FieldName,
+                RuleName = r.RuleName,
+                RuleType = r.RuleType,
+                SourcePattern = r.SourcePattern,
+                TargetPattern = r.TargetPattern,
+                LookupTableJson = r.LookupTableJson,
+                CustomScript = r.CustomScript,
+                ScriptLanguage = r.ScriptLanguage,
+                Priority = r.Priority,
+                IsActive = r.IsActive,
+                CreatedDate = r.CreatedDate,
+                LastModifiedDate = r.LastModifiedDate,
+                CurrentVersion = r.CurrentVersion,
+                LastModifiedBy = r.LastModifiedBy,
+                LastModifiedAt = r.LastModifiedAt
+            }).ToList();
+
+            var response = new
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = validatedPageSize,
+                TotalPages = PaginationHelper.CalculateTotalPages(totalCount, validatedPageSize),
+                AllowedPageSizes = PaginationHelper.AllowedPageSizes,
+                Rules = dtos
+            };
+
+            return Ok(response);
         }
-
-        var rules = await query
-            .OrderBy(r => r.Priority)
-            .ThenBy(r => r.RuleName)
-            .ToListAsync();
-
-        return Ok(rules);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching transformation rules");
+            return StatusCode(500, new { error = "Error fetching transformation rules", message = ex.Message });
+        }
     }
 
     /// <summary>
     /// Gets a specific transformation rule by ID
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<TransformationRule>> GetRule(int id)
+    public async Task<ActionResult<TransformationRuleDto>> GetRule(int id)
     {
         var rule = await _context.TransformationRules.FindAsync(id);
 
@@ -58,7 +118,28 @@ public class TransformationRulesController : ControllerBase
             return NotFound();
         }
 
-        return Ok(rule);
+        var dto = new TransformationRuleDto
+        {
+            Id = rule.Id,
+            InventoryTypeId = rule.InventoryTypeId,
+            FieldName = rule.FieldName,
+            RuleName = rule.RuleName,
+            RuleType = rule.RuleType,
+            SourcePattern = rule.SourcePattern,
+            TargetPattern = rule.TargetPattern,
+            LookupTableJson = rule.LookupTableJson,
+            CustomScript = rule.CustomScript,
+            ScriptLanguage = rule.ScriptLanguage,
+            Priority = rule.Priority,
+            IsActive = rule.IsActive,
+            CreatedDate = rule.CreatedDate,
+            LastModifiedDate = rule.LastModifiedDate,
+            CurrentVersion = rule.CurrentVersion,
+            LastModifiedBy = rule.LastModifiedBy,
+            LastModifiedAt = rule.LastModifiedAt
+        };
+
+        return Ok(dto);
     }
 
     /// <summary>
